@@ -14,7 +14,15 @@ struct MenuBarSettingsPane: View {
             CustomTab("Appearance") {
                 MenuBarAppearanceTab(location: .settings)
             }
-            CustomTab("Layout") {
+            CustomTab {
+                HStack(spacing: 5) {
+                    Text("Layout")
+                    Text("BETA")
+                        .font(.caption)
+                        .foregroundStyle(.green)
+                        .offset(y: 1)
+                }
+            } content: {
                 MenuBarLayoutTab()
             }
         }
