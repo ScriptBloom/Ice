@@ -7,6 +7,8 @@ import Cocoa
 import Combine
 
 class MenuBarItemManager: ObservableObject {
+    @Published private(set) var configuration = MenuBarItemConfiguration()
+
     private(set) weak var menuBarManager: MenuBarManager?
 
     init(menuBarManager: MenuBarManager) {
@@ -29,8 +31,12 @@ class MenuBarItemManager: ObservableObject {
             return []
         }
 
-        return windows.compactMap { window in
+        let items = windows.compactMap { window in
             MenuBarItem(itemWindow: window, menuBarWindow: menuBarWindow, display: display)
+        }
+
+        return items.sorted { lhs, rhs in
+            lhs.frame.maxX < rhs.frame.maxX
         }
     }
 }

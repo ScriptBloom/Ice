@@ -59,6 +59,10 @@ class LayoutBarContainer: NSView {
     /// After each layout pass, this value is reset to `true`.
     var shouldAnimateNextLayoutPass = true
 
+    /// A Boolean value that indicates whether the container can
+    /// update its arranged views.
+    var canUpdateArrangedViews = true
+
     /// The amount of space between each arranged view.
     var spacing: CGFloat {
         didSet {
@@ -94,6 +98,7 @@ class LayoutBarContainer: NSView {
         self.translatesAutoresizingMaskIntoConstraints = false
         unregisterDraggedTypes()
         configureCancellables()
+        updateArrangedViews()
     }
 
     @available(*, unavailable)
@@ -107,39 +112,7 @@ class LayoutBarContainer: NSView {
         Timer.publish(every: 5, on: .main, in: .default)
             .autoconnect()
             .sink { [weak self] _ in
-                guard 
-                    let self,
-                    let display = DisplayInfo.main
-                else {
-                    return
-                }
-                Task {
-                    let items = self.menuBarItemManager.getMenuBarItems(for: display, onScreenOnly: true)
-                        .sorted { lhs, rhs in
-                            lhs.frame.maxX < rhs.frame.maxX
-                        }
-                    var arrangedViews = [LayoutBarItemView]()
-                    for item in items {
-                        do {
-                            let image = try await ScreenCaptureManager.shared.captureImage(
-                                withTimeout: .milliseconds(500),
-                                windowPredicate: { $0.windowID == item.windowID },
-                                displayPredicate: { $0.displayID == display.displayID }
-                            )
-                            arrangedViews.append(
-                                LayoutBarItemView(
-                                    item: item,
-                                    image: NSImage(cgImage: image, size: item.frame.size),
-                                    toolTip: item.displayName,
-                                    isEnabled: item.acceptsMouseEvents
-                                )
-                            )
-                        } catch {
-                            continue
-                        }
-                    }
-                    self.arrangedViews = arrangedViews
-                }
+                self?.updateArrangedViews()
             }
             .store(in: &c)
 
@@ -212,6 +185,38 @@ class LayoutBarContainer: NSView {
         heightConstraint.constant = maxHeight
     }
 
+    func updateArrangedViews() {
+        guard
+            canUpdateArrangedViews,
+            let display = DisplayInfo.main
+        else {
+            return
+        }
+
+        Task {
+            var arrangedViews = [LayoutBarItemView]()
+            for item in section.menuBarItems {
+                do {
+                    let image = try await ScreenCaptureManager.shared.captureImage(
+                        withTimeout: .milliseconds(500),
+                        windowPredicate: { $0.windowID == item.windowID },
+                        displayPredicate: { $0.displayID == display.displayID }
+                    )
+                    let view = LayoutBarItemView(
+                        item: item,
+                        image: NSImage(cgImage: image, size: item.frame.size),
+                        toolTip: item.displayName,
+                        isEnabled: item.acceptsMouseEvents
+                    )
+                    arrangedViews.append(view)
+                } catch {
+                    continue
+                }
+            }
+            self.arrangedViews = arrangedViews
+        }
+    }
+
     /// Updates the positions of the container's arranged views using
     /// the specified dragging information and returns an appropriate
     /// drag operation.
@@ -225,15 +230,18 @@ class LayoutBarContainer: NSView {
         }
         switch phase {
         case .entered:
+            canUpdateArrangedViews = false
             shouldAnimateNextLayoutPass = false
             return updateArrangedViewsForDrag(with: draggingInfo, phase: .updated)
         case .exited:
+            canUpdateArrangedViews = true
             if let sourceIndex = arrangedViews.firstIndex(of: sourceView) {
                 shouldAnimateNextLayoutPass = false
                 arrangedViews.remove(at: sourceIndex)
             }
             return .move
         case .updated:
+            canUpdateArrangedViews = false
             if
                 sourceView.oldContainerInfo == nil,
                 let sourceIndex = arrangedViews.firstIndex(of: sourceView)
@@ -282,6 +290,7 @@ class LayoutBarContainer: NSView {
             }
             return .move
         case .ended:
+            canUpdateArrangedViews = true
             return .move
         }
     }
