@@ -36,12 +36,12 @@ class LayoutBarCocoaView: NSView {
     /// section, and spacing.
     ///
     /// - Parameters:
-    ///   - menuBarManager: The shared menu bar manager instance.
+    ///   - menuBarItemManager: The shared menu bar item manager instance.
     ///   - section: The section whose items are represented.
     ///   - spacing: The amount of space between each arranged view.
-    init(menuBarManager: MenuBarManager, section: MenuBarSection, spacing: CGFloat) {
+    init(menuBarItemManager: MenuBarItemManager, section: MenuBarSection, spacing: CGFloat) {
         self.container = LayoutBarContainer(
-            menuBarManager: menuBarManager,
+            menuBarItemManager: menuBarItemManager,
             section: section,
             spacing: spacing
         )

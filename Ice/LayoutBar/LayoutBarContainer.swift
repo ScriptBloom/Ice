@@ -47,8 +47,8 @@ class LayoutBarContainer: NSView {
         return constraint
     }()
 
-    /// The shared menu bar manager instance.
-    let menuBarManager: MenuBarManager
+    /// The shared menu bar item manager instance.
+    let menuBarItemManager: MenuBarItemManager
 
     /// The section whose items are represented.
     let section: MenuBarSection
@@ -86,8 +86,8 @@ class LayoutBarContainer: NSView {
     ///   - menuBarManager: The shared menu bar manager instance.
     ///   - section: The section whose items are represented.
     ///   - spacing: The amount of space between each arranged view.
-    init(menuBarManager: MenuBarManager, section: MenuBarSection, spacing: CGFloat) {
-        self.menuBarManager = menuBarManager
+    init(menuBarItemManager: MenuBarItemManager, section: MenuBarSection, spacing: CGFloat) {
+        self.menuBarItemManager = menuBarItemManager
         self.section = section
         self.spacing = spacing
         super.init(frame: .zero)
@@ -102,9 +102,48 @@ class LayoutBarContainer: NSView {
     }
 
     private func configureCancellables() {
-//        var c = Set<AnyCancellable>()
-//        // TODO: -
-//        cancellables = c
+        var c = Set<AnyCancellable>()
+
+        Timer.publish(every: 5, on: .main, in: .default)
+            .autoconnect()
+            .sink { [weak self] _ in
+                guard 
+                    let self,
+                    let display = DisplayInfo.main
+                else {
+                    return
+                }
+                Task {
+                    let items = self.menuBarItemManager.getMenuBarItems(for: display, onScreenOnly: true)
+                        .sorted { lhs, rhs in
+                            lhs.frame.maxX < rhs.frame.maxX
+                        }
+                    var arrangedViews = [LayoutBarItemView]()
+                    for item in items {
+                        do {
+                            let image = try await ScreenCaptureManager.shared.captureImage(
+                                withTimeout: .milliseconds(500),
+                                windowPredicate: { $0.windowID == item.windowID },
+                                displayPredicate: { $0.displayID == display.displayID }
+                            )
+                            arrangedViews.append(
+                                LayoutBarItemView(
+                                    item: item,
+                                    image: NSImage(cgImage: image, size: item.frame.size),
+                                    toolTip: item.displayName,
+                                    isEnabled: item.acceptsMouseEvents
+                                )
+                            )
+                        } catch {
+                            continue
+                        }
+                    }
+                    self.arrangedViews = arrangedViews
+                }
+            }
+            .store(in: &c)
+
+        cancellables = c
     }
 
     /// Performs layout of the container's arranged views.
