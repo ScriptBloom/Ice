@@ -6,11 +6,16 @@
 import Foundation
 
 enum Constants {
+    // swiftlint:disable force_unwrapping
     /// The display name in the app's bundle.
-    static let appName = Bundle.main.displayName! // swiftlint:disable:this force_unwrapping
+    static let appName = Bundle.main.displayName!
 
     /// The version string in the app's bundle.
-    static let appVersion = Bundle.main.versionString! // swiftlint:disable:this force_unwrapping
+    static let appVersion = Bundle.main.versionString!
+
+    /// The bundle identifier of the app.
+    static let bundleIdentifier = Bundle.main.bundleIdentifier!
+    // swiftlint:enable force_unwrapping
 
     /// A user-readable copyright string formatted with non-breaking
     /// spaces for display in the user interface.

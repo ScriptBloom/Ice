@@ -175,5 +175,5 @@ extension LayoutBarItemView: NSDraggingSource {
 
 // MARK: Layout Bar Item Pasteboard Type
 extension NSPasteboard.PasteboardType {
-    static let layoutBarItem = Self("\(Bundle.main.bundleIdentifier!).layout-bar-item")
+    static let layoutBarItem = Self("\(Constants.bundleIdentifier).layout-bar-item")
 }
