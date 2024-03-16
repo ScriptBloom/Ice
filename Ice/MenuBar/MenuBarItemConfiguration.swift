@@ -3,7 +3,7 @@
 //  Ice
 //
 
-struct MenuBarItemConfiguration: Codable {
+struct MenuBarItemConfiguration {
     var visibleItems = [MenuBarItem]()
     var hiddenItems = [MenuBarItem]()
     var alwaysHiddenItems = [MenuBarItem]()
