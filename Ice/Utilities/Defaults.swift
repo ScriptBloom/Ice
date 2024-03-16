@@ -136,6 +136,9 @@ extension Defaults {
 
         case sections = "Sections"
 
+        case profiles = "Profiles"
+        case activeProfileName = "ActiveProfileName"
+
         case secondaryAction = "SecondaryAction"
         case secondaryActionModifier = "SecondaryActionModifier"
         case performSecondaryActionInEmptySpace = "PerformSecondaryActionInEmptySpace"
