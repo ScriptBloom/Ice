@@ -105,6 +105,9 @@ class LayoutBarCocoaView: NSView {
         else {
             return false
         }
+        DispatchQueue.main.async {
+            self.container.canUpdateArrangedViews = true
+        }
         return moveItem(for: sourceView)
     }
 

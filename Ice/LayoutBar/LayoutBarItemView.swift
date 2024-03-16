@@ -8,7 +8,7 @@ import Cocoa
 // MARK: - LayoutBarItemView
 
 /// A view that displays an image in a menu bar layout view.
-class LayoutBarItemView: NSControl {
+class LayoutBarItemView: NSView {
     /// Temporary information that the item view retains when it is
     /// moved outside of a layout view.
     ///
@@ -40,29 +40,31 @@ class LayoutBarItemView: NSControl {
         }
     }
 
-    /// Creates an item view that displays the given image.
-    init(item: MenuBarItem, image: NSImage, toolTip: String, isEnabled: Bool) {
+    /// A Boolean value that indicates whether the view is enabled.
+    var isEnabled = true {
+        didSet {
+            needsDisplay = true
+        }
+    }
+
+    /// Creates a view that displays the given menu bar item.
+    init(item: MenuBarItem, display: DisplayInfo) async throws {
+        let image = try await ScreenCaptureManager.shared.captureImage(
+            withTimeout: .milliseconds(500),
+            windowPredicate: { $0.windowID == item.windowID },
+            displayPredicate: { $0.displayID == display.displayID }
+        )
         self.item = item
         // only trim horizontal edges to maintain proper vertical
         // centering due to status item shadow offsetting the trim
         let trimmedImage = image.trimmingTransparentPixels(edges: [.minXEdge, .maxXEdge])
-        self.image = trimmedImage ?? image
+        self.image = NSImage(cgImage: trimmedImage ?? image, size: item.frame.size)
         // set the frame to the full image size; the trimmed image
         // will be centered within the full bounds when displayed
-        super.init(frame: NSRect(origin: .zero, size: image.size))
-        self.toolTip = toolTip
-        self.isEnabled = isEnabled
+        super.init(frame: NSRect(origin: .zero, size: item.frame.size))
+        self.toolTip = item.displayName
+        self.isEnabled = item.acceptsMouseEvents
         unregisterDraggedTypes()
-    }
-
-    /// Creates an item view that displays the given CoreGraphics image.
-    convenience init(item: MenuBarItem, image: CGImage, size: CGSize, toolTip: String, isEnabled: Bool) {
-        self.init(
-            item: item,
-            image: NSImage(cgImage: image, size: size),
-            toolTip: toolTip,
-            isEnabled: isEnabled
-        )
     }
 
     @available(*, unavailable)
@@ -90,7 +92,7 @@ class LayoutBarItemView: NSControl {
                 in: bounds,
                 from: .zero,
                 operation: .sourceOver,
-                fraction: isEnabled ? 1.0 : (2 / 3)
+                fraction: item.acceptsMouseEvents ? 1.0 : 0.67
             )
         }
     }
@@ -98,7 +100,11 @@ class LayoutBarItemView: NSControl {
     override func mouseDragged(with event: NSEvent) {
         super.mouseDragged(with: event)
 
-        guard isEnabled else {
+        guard item.acceptsMouseEvents else {
+            let alert = NSAlert()
+            alert.messageText = "Item is not movable."
+            alert.informativeText = "macOS prohibits \"\(item.displayName)\" from being moved."
+            alert.runModal()
             return
         }
 
@@ -118,20 +124,21 @@ class LayoutBarItemView: NSControl {
 
 // MARK: LayoutBarItemView: NSDraggingSource
 extension LayoutBarItemView: NSDraggingSource {
-    func draggingSession(
-        _ session: NSDraggingSession,
-        sourceOperationMaskFor context: NSDraggingContext
-    ) -> NSDragOperation {
+    func draggingSession(_ session: NSDraggingSession, sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
         return .move
     }
 
-    func draggingSession(
-        _ session: NSDraggingSession,
-        willBeginAt screenPoint: NSPoint
-    ) {
+    func draggingSession(_ session: NSDraggingSession, willBeginAt screenPoint: NSPoint) {
+        // make sure the container doesn't update its arranged
+        // views during a dragging session
+        if let container = superview as? LayoutBarContainer {
+            container.canUpdateArrangedViews = false
+        }
+
         // prevent the dragging image from animating back to its
         // original location
         session.animatesToStartingPositionsOnCancelOrFail = false
+
         // async to prevent the view from disappearing before the
         // dragging image appears
         DispatchQueue.main.async {
@@ -139,15 +146,12 @@ extension LayoutBarItemView: NSDraggingSource {
         }
     }
 
-    func draggingSession(
-        _ session: NSDraggingSession,
-        endedAt screenPoint: NSPoint,
-        operation: NSDragOperation
-    ) {
+    func draggingSession(_ session: NSDraggingSession, endedAt screenPoint: NSPoint, operation: NSDragOperation) {
         defer {
             // always remove container info at the end of a session
             oldContainerInfo = nil
         }
+
         // since the session's `animatesToStartingPositionsOnCancelOrFail`
         // property was set to false when the session began (above), there
         // is no delay between the user releasing the dragging item and
@@ -156,6 +160,7 @@ extension LayoutBarItemView: NSDraggingSource {
         // it may also need to be updated inside `performDragOperation(_:)`
         // on `LayoutBarCocoaView`
         isDraggingPlaceholder = false
+
         // if the drop occurs outside of a container, reinsert the view
         // into its original container at its original index
         if !hasContainer {
