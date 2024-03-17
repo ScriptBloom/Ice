@@ -10,7 +10,13 @@ import OSLog
 /// A status item that controls the visibility of a section
 /// in the menu bar.
 final class ControlItem: ObservableObject {
-    enum HidingState: Int, Hashable, Codable {
+    enum Identifier: String, Hashable {
+        case iceIcon = "IceIcon"
+        case hidden = "HiddenItem"
+        case alwaysHidden = "AlwaysHiddenItem"
+    }
+
+    enum HidingState: Int, Hashable {
         case hideItems
         case showItems
     }
@@ -27,6 +33,9 @@ final class ControlItem: ObservableObject {
     private weak var appState: AppState?
 
     private let statusItem: NSStatusItem
+
+    /// The control item's identifier.
+    let identifier: Identifier
 
     /// A Boolean value that indicates whether the control
     /// item is visible.
@@ -65,19 +74,9 @@ final class ControlItem: ObservableObject {
         return section.name != .visible
     }
 
-    /// Creates a control item with the given autosave name, position,
-    /// and hiding state.
-    ///
-    /// - Parameters:
-    ///   - autosaveName: The control item's autosave name.
-    ///   - position: The position of the control item in the menu bar.
-    ///     Pass `nil` to add the control item to the end of the menu bar.
-    ///   - state: The hiding state of the control item.
-    init(
-        autosaveName: String,
-        position: CGFloat?,
-        state: HidingState? = nil
-    ) {
+    init(identifier: Identifier) {
+        let autosaveName = identifier.rawValue
+
         // if the isVisible property has been previously set, it will have
         // been stored in user defaults; if a status item is created in an
         // invisible state, its preferred position is deleted; to prevent
@@ -87,16 +86,24 @@ final class ControlItem: ObservableObject {
         let cachedIsVisible = StatusItemDefaults[.isVisible, autosaveName]
         StatusItemDefaults[.isVisible, autosaveName] = nil
 
-        if let position {
-            // set the preferred position first to ensure that
-            // the status item appears in the correct position
-            StatusItemDefaults[.preferredPosition, autosaveName] = position
+        // if the status item doesn't have a preferred position, set it
+        // according to the identifier
+        if StatusItemDefaults[.preferredPosition, autosaveName] == nil {
+            switch identifier {
+            case .iceIcon:
+                StatusItemDefaults[.preferredPosition, autosaveName] = 0
+            case .hidden:
+                StatusItemDefaults[.preferredPosition, autosaveName] = 1
+            case .alwaysHidden:
+                break
+            }
         }
 
         self.statusItem = NSStatusBar.system.statusItem(withLength: Lengths.standard)
         self.statusItem.autosaveName = autosaveName
+        self.identifier = identifier
         self.isVisible = statusItem.isVisible
-        self.state = state ?? .showItems
+        self.state = .showItems
 
         // NOTE: cache needs to be restored after the status item
         // is created, but before the call to configureStatusItem()
@@ -159,7 +166,6 @@ final class ControlItem: ObservableObject {
                     }
                 }
                 statusItem.isVisible = isVisible
-                appState?.menuBarManager.needsSave = true
                 deferredBlock?()
             }
             .store(in: &c)
@@ -245,10 +251,6 @@ final class ControlItem: ObservableObject {
             let button = statusItem.button
         else {
             return
-        }
-
-        defer {
-            appState.menuBarManager.needsSave = true
         }
 
         switch section.name {
@@ -428,33 +430,10 @@ final class ControlItem: ObservableObject {
     }
 }
 
-// MARK: ControlItem: Codable
-extension ControlItem: Codable {
-    private enum CodingKeys: String, CodingKey {
-        case autosaveName
-        case state
-    }
-
-    convenience init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        try self.init(
-            autosaveName: container.decode(String.self, forKey: .autosaveName),
-            position: nil,
-            state: container.decode(HidingState.self, forKey: .state)
-        )
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(autosaveName, forKey: .autosaveName)
-        try container.encode(state, forKey: .state)
-    }
-}
-
 // MARK: - StatusItemDefaultsKey
 
 /// Keys used to look up user defaults for status items.
-private struct StatusItemDefaultsKey<Value> {
+struct StatusItemDefaultsKey<Value> {
     let rawValue: String
 }
 
@@ -469,7 +448,7 @@ extension StatusItemDefaultsKey<Bool> {
 // MARK: - StatusItemDefaults
 
 /// Proxy getters and setters for a status item's user default values.
-private enum StatusItemDefaults {
+enum StatusItemDefaults {
     private static func stringKey<Value>(
         forKey key: StatusItemDefaultsKey<Value>,
         autosaveName: String
@@ -490,6 +469,17 @@ private enum StatusItemDefaults {
             let key = stringKey(forKey: key, autosaveName: autosaveName)
             UserDefaults.standard.set(newValue, forKey: key)
         }
+    }
+
+    /// Migrates the given status item defaults key from an old
+    /// autosave name to a new autosave name.
+    static func migrate<Value>(
+        key: StatusItemDefaultsKey<Value>,
+        from oldAutosaveName: String,
+        to newAutosaveName: String
+    ) {
+        Self[key, newAutosaveName] = Self[key, oldAutosaveName]
+        Self[key, oldAutosaveName] = nil
     }
 }
 

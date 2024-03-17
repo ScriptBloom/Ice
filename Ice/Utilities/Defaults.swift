@@ -131,45 +131,54 @@ enum Defaults {
 
 extension Defaults {
     enum Key: String {
+
+        // MARK: General Settings
+
+        case showIceIcon = "ShowIceIcon"
         case iceIcon = "IceIcon"
         case customIceIconIsTemplate = "CustomIceIconIsTemplate"
-
-        case sections = "Sections"
-
-        case profiles = "Profiles"
-        case activeProfileName = "ActiveProfileName"
-
-        case secondaryAction = "SecondaryAction"
-        case secondaryActionModifier = "SecondaryActionModifier"
-        case performSecondaryActionInEmptySpace = "PerformSecondaryActionInEmptySpace"
-
-        case hideApplicationMenus = "HideApplicationMenus"
-        case showSectionDividers = "ShowSectionDividers"
-        case showIceIcon = "ShowIceIcon"
-
         case showOnClick = "ShowOnClick"
         case showOnHover = "ShowOnHover"
         case showOnScroll = "ShowOnScroll"
-
         case autoRehide = "AutoRehide"
         case rehideStrategy = "RehideStrategy"
         case rehideInterval = "RehideInterval"
 
-        case menuBarAppearanceConfiguration = "MenuBarAppearanceConfiguration"
+        // MARK: Hotkey Settings
+
         case hotkeys = "Hotkeys"
+
+        // MARK: Advanced Settings
+
+        case hideApplicationMenus = "HideApplicationMenus"
+        case showSectionDividers = "ShowSectionDividers"
+        case secondaryAction = "SecondaryAction"
+        case secondaryActionModifier = "SecondaryActionModifier"
+        case performSecondaryActionInEmptySpace = "PerformSecondaryActionInEmptySpace"
+
+        // MARK: Menu Bar Profile Settings
+
+        case profiles = "Profiles"
+        case activeProfileName = "ActiveProfileName"
+
+        // MARK: Menu Bar Appearance Settings
+
+        case menuBarAppearanceConfiguration = "MenuBarAppearanceConfiguration"
+
+        // MARK: Migration
+
+        case hasMigrated0_8_0 = "hasMigrated0_8_0"
 
         // MARK: Deprecated
 
+        case sections = "Sections"
         case menuBarHasBorder = "MenuBarHasBorder"
         case menuBarBorderColor = "MenuBarBorderColor"
         case menuBarBorderWidth = "MenuBarBorderWidth"
-
         case menuBarHasShadow = "MenuBarHasShadow"
-
         case menuBarTintKind = "MenuBarTintKind"
         case menuBarTintColor = "MenuBarTintColor"
         case menuBarTintGradient = "MenuBarTintGradient"
-
         case menuBarShapeKind = "MenuBarShapeKind"
         case menuBarFullShapeInfo = "MenuBarFullShapeInfo"
         case menuBarSplitShapeInfo = "MenuBarSplitShapeInfo"

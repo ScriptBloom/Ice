@@ -59,11 +59,11 @@ final class MenuBarSection: ObservableObject {
     convenience init(name: Name) {
         let controlItem = switch name {
         case .visible:
-            ControlItem(autosaveName: "Item-1", position: 0, state: nil)
+            ControlItem(identifier: .iceIcon)
         case .hidden:
-            ControlItem(autosaveName: "Item-2", position: 1, state: nil)
+            ControlItem(identifier: .hidden)
         case .alwaysHidden:
-            ControlItem(autosaveName: "Item-3", position: nil, state: .hideItems)
+            ControlItem(identifier: .alwaysHidden)
         }
         self.init(name: name, controlItem: controlItem)
     }
@@ -270,28 +270,6 @@ final class MenuBarSection: ObservableObject {
         rehideMonitor?.stop()
         rehideTimer = nil
         rehideMonitor = nil
-    }
-}
-
-// MARK: MenuBarSection: Codable
-extension MenuBarSection: Codable {
-    private enum CodingKeys: String, CodingKey {
-        case name
-        case controlItem
-    }
-
-    convenience init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        try self.init(
-            name: container.decode(Name.self, forKey: .name),
-            controlItem: container.decode(ControlItem.self, forKey: .controlItem)
-        )
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(name, forKey: .name)
-        try container.encode(controlItem, forKey: .controlItem)
     }
 }
 
