@@ -75,20 +75,17 @@ class MenuBarItemManager: ObservableObject {
                 }
                 menuBarManager.activeProfile.visibleItems += items
                     .filter { item in
+                        item.acceptsMouseEvents &&
                         item.frame.minX >= hiddenControlItem.frame.maxX
                     }
                     .compactMap { item in
                         guard
-                            let bundleIdentifier = item.owningApplication?.bundleIdentifier,
+                            let namespace = item.owningApplication?.bundleIdentifier,
                             let title = item.title
                         else {
                             return nil
                         }
-                        return MenuBarProfile.MenuBarItemInfo(
-                            bundleIdentifier: bundleIdentifier,
-                            title: title,
-                            isSpecial: false
-                        )
+                        return MenuBarProfile.MenuBarItemInfo(namespace: namespace, title: title)
                     }
                     .reversed()
             case .hidden:
@@ -106,16 +103,12 @@ class MenuBarItemManager: ObservableObject {
                     }
                     .compactMap { item in
                         guard
-                            let bundleIdentifier = item.owningApplication?.bundleIdentifier,
+                            let namespace = item.owningApplication?.bundleIdentifier,
                             let title = item.title
                         else {
                             return nil
                         }
-                        return MenuBarProfile.MenuBarItemInfo(
-                            bundleIdentifier: bundleIdentifier,
-                            title: title,
-                            isSpecial: false
-                        )
+                        return MenuBarProfile.MenuBarItemInfo(namespace: namespace, title: title)
                     }
                     .reversed()
             case .alwaysHidden:
@@ -129,16 +122,12 @@ class MenuBarItemManager: ObservableObject {
                     }
                     .compactMap { item in
                         guard
-                            let bundleIdentifier = item.owningApplication?.bundleIdentifier,
+                            let namespace = item.owningApplication?.bundleIdentifier,
                             let title = item.title
                         else {
                             return nil
                         }
-                        return MenuBarProfile.MenuBarItemInfo(
-                            bundleIdentifier: bundleIdentifier,
-                            title: title,
-                            isSpecial: false
-                        )
+                        return MenuBarProfile.MenuBarItemInfo(namespace: namespace, title: title)
                     }
                     .reversed()
             }

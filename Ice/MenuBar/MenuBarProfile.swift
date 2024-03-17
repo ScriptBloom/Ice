@@ -39,20 +39,23 @@ extension MenuBarProfile: Codable {
 
 extension MenuBarProfile {
     struct MenuBarItemInfo {
-        let bundleIdentifier: String
+        let namespace: String
         let title: String
-        let isSpecial: Bool
+
+        var isSpecial: Bool {
+            namespace == "$"
+        }
     }
 }
 
 // MARK: MenuBarItemInfo Constants
 extension MenuBarProfile.MenuBarItemInfo {
     /// Information for an item that represents the Ice icon.
-    static let iceIcon = Self(bundleIdentifier: Constants.bundleIdentifier, title: "IceIcon", isSpecial: false)
+    static let iceIcon = Self(namespace: Constants.bundleIdentifier, title: "IceIcon")
 
     /// Information for a special item that indicates the location
     /// where new menu bar items should appear.
-    static let newItems = Self(bundleIdentifier: "", title: "NewItems", isSpecial: true)
+    static let newItems = Self(namespace: "$", title: "NewItems")
 }
 
 // MARK: MenuBarItemInfo: Codable
@@ -61,26 +64,20 @@ extension MenuBarProfile.MenuBarItemInfo: Codable {
         let container = try decoder.singleValueContainer()
         let string = try container.decode(String.self)
         let components = string.components(separatedBy: "/")
-        guard components.count == 3 else {
+        guard components.count == 2 else {
             throw DecodingError.dataCorrupted(
                 DecodingError.Context(
                     codingPath: container.codingPath,
-                    debugDescription: "Expected 3 components, found \(components.count)"
+                    debugDescription: "Expected 2 components, found \(components.count)"
                 )
             )
         }
-        self.bundleIdentifier = components[1]
-        self.title = components[2]
-        self.isSpecial = components[0] == "$"
+        self.namespace = components[0]
+        self.title = components[1]
     }
 
     func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
-        let components = [
-            isSpecial ? "$" : "",
-            bundleIdentifier,
-            title,
-        ]
-        try container.encode(components.joined(separator: "/"))
+        try container.encode(namespace + "/" + title)
     }
 }
