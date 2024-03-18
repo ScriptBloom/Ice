@@ -9,6 +9,11 @@ import Cocoa
 
 /// A view that displays an image in a menu bar layout view.
 class LayoutBarItemView: NSView {
+    static let placeholderImage: CGImage = {
+        let nsImage = NSImage(systemSymbolName: "questionmark.circle.fill", accessibilityDescription: "")!
+        return nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil)!
+    }()
+
     /// Temporary information that the item view retains when it is
     /// moved outside of a layout view.
     ///
@@ -48,12 +53,20 @@ class LayoutBarItemView: NSView {
     }
 
     /// Creates a view that displays the given menu bar item.
-    init(item: MenuBarItem, display: DisplayInfo) async throws {
-        let image = try await ScreenCaptureManager.shared.captureImage(
-            withTimeout: .milliseconds(500),
-            windowPredicate: { $0.windowID == item.windowID },
-            displayPredicate: { $0.displayID == display.displayID }
-        )
+    init(item: MenuBarItem, display: DisplayInfo, itemManager: MenuBarItemManager) async throws {
+        let image: CGImage
+        if let cachedImage = itemManager.cachedItemImages[item] {
+            image = cachedImage
+        } else {
+            try await ScreenCaptureManager.shared.update()
+            let capturedImage = try await ScreenCaptureManager.shared.captureImage(
+                withTimeout: .milliseconds(500),
+                windowPredicate: { $0.windowID == item.windowID },
+                displayPredicate: { $0.displayID == display.displayID }
+            )
+            itemManager.cachedItemImages[item] = capturedImage
+            image = capturedImage
+        }
         self.item = item
         // only trim horizontal edges to maintain proper vertical
         // centering due to status item shadow offsetting the trim

@@ -166,6 +166,13 @@ class ScreenCaptureManager: ObservableObject {
         cancellables = c
     }
 
+    func update() async throws {
+        let content = try await SCShareableContent.current
+        self.applications = content.applications
+        self.displays = content.displays
+        self.windows = content.windows
+    }
+
     /// Immediately updates the manager's content, performing the
     /// given completion handler when finished.
     func updateWithCompletionHandler(_ completionHandler: @escaping () -> Void) {

@@ -11,22 +11,10 @@ class MenuBarItemManager: ObservableObject {
 
     private var cancellables = Set<AnyCancellable>()
 
+    @Published var cachedItemImages = [MenuBarItem: CGImage]()
+
     init(menuBarManager: MenuBarManager) {
         self.menuBarManager = menuBarManager
-        configureCancellables()
-    }
-
-    private func configureCancellables() {
-        var c = Set<AnyCancellable>()
-
-//        Timer.publish(every: 5, on: .main, in: .default)
-//            .autoconnect()
-//            .sink { [weak self] _ in
-//                self?.updateProfile()
-//            }
-//            .store(in: &c)
-
-        cancellables = c
     }
 
     /// Returns an array of menu bar items in the menu bar of the given display.
