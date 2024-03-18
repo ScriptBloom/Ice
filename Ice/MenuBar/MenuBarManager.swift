@@ -213,7 +213,7 @@ final class MenuBarManager: ObservableObject {
             }
             .store(in: &c)
 
-        Timer.publish(every: 5, on: .main, in: .default)
+        Timer.publish(every: 3, on: .main, in: .default)
             .autoconnect()
             .sink { [weak self] _ in
                 self?.updateAverageColor()
@@ -262,6 +262,7 @@ final class MenuBarManager: ObservableObject {
     /// desktop wallpaper behind the menu bar.
     private func updateAverageColor() {
         Task { @MainActor in
+            try await ScreenCaptureManager.shared.update()
             guard
                 let display = DisplayInfo.main,
                 let wallpaper = try await ScreenCaptureManager.shared.desktopWallpaperBelowMenuBar(for: display),
