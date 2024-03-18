@@ -3,81 +3,53 @@
 //  Ice
 //
 
-import Foundation
+import CoreGraphics
 
 // MARK: - MenuBarProfile
 
-struct MenuBarProfile {
+final class MenuBarProfile {
     var name: String
-    var visibleItems = [MenuBarItemInfo]()
-    var hiddenItems = [MenuBarItemInfo]()
-    var alwaysHiddenItems = [MenuBarItemInfo]()
+    var itemConfiguration: MenuBarItemConfiguration
+
+    init(name: String, itemConfiguration: MenuBarItemConfiguration) {
+        self.name = name
+        self.itemConfiguration = itemConfiguration
+    }
 }
 
 // MARK: Default Profile
 extension MenuBarProfile {
-    /// The default menu bar profile.
-    static let defaultProfile = MenuBarProfile(
-        name: "Default",
-        visibleItems: [.iceIcon],
-        hiddenItems: [.newItems],
-        alwaysHiddenItems: []
-    )
+    /// The name of the default profile.
+    static let defaultProfileName = "Default"
+
+    /// Creates the default menu bar profile using the given menu bar
+    /// item manager and display to read the current menu bar items.
+    static func createDefaultProfile(with itemManager: MenuBarItemManager, display: DisplayInfo) -> MenuBarProfile {
+        let profile = MenuBarProfile(name: defaultProfileName, itemConfiguration: .defaultConfiguration)
+        profile.itemConfiguration.hiddenItems += itemManager
+            .getMenuBarItems(for: display, onScreenOnly: false)
+            .filter { item in
+                item.acceptsMouseEvents &&
+                item.owningApplication != .current
+            }
+            .compactMap { item in
+                guard
+                    let namespace = item.owningApplication?.bundleIdentifier,
+                    let title = item.title
+                else {
+                    return nil
+                }
+                return MenuBarItemInfo(namespace: namespace, title: title)
+            }
+            .reversed()
+        return profile
+    }
 }
 
 // MARK: MenuBarProfile: Codable
 extension MenuBarProfile: Codable {
     private enum CodingKeys: String, CodingKey {
         case name = "Name"
-        case visibleItems = "Visible"
-        case hiddenItems = "Hidden"
-        case alwaysHiddenItems = "AlwaysHidden"
-    }
-}
-
-// MARK: - MenuBarItemInfo
-
-extension MenuBarProfile {
-    struct MenuBarItemInfo {
-        let namespace: String
-        let title: String
-
-        var isSpecial: Bool {
-            namespace == "$"
-        }
-    }
-}
-
-// MARK: MenuBarItemInfo Constants
-extension MenuBarProfile.MenuBarItemInfo {
-    /// Information for an item that represents the Ice icon.
-    static let iceIcon = Self(namespace: Constants.bundleIdentifier, title: "IceIcon")
-
-    /// Information for a special item that indicates the location
-    /// where new menu bar items should appear.
-    static let newItems = Self(namespace: "$", title: "NewItems")
-}
-
-// MARK: MenuBarItemInfo: Codable
-extension MenuBarProfile.MenuBarItemInfo: Codable {
-    init(from decoder: any Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        let string = try container.decode(String.self)
-        let components = string.components(separatedBy: "/")
-        guard components.count == 2 else {
-            throw DecodingError.dataCorrupted(
-                DecodingError.Context(
-                    codingPath: container.codingPath,
-                    debugDescription: "Expected 2 components, found \(components.count)"
-                )
-            )
-        }
-        self.namespace = components[0]
-        self.title = components[1]
-    }
-
-    func encode(to encoder: any Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(namespace + "/" + title)
+        case itemConfiguration = "Items"
     }
 }

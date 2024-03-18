@@ -25,14 +25,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             appState.assignPermissionsWindow(permissionsWindow)
         }
 
-        if !appState.isPreview {
-            // if we have the required permissions, set up the
-            // shared app state
-            if appState.permissionsManager.hasPermission {
-                appState.performSetup()
-            }
-        }
-
         // hide the main menu to make more space in the menu bar
         if let mainMenu = NSApp.mainMenu {
             for item in mainMenu.items {
@@ -40,9 +32,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        // hide all sections
-        for section in appState.menuBarManager.sections {
-            section.hide()
+        if !appState.isPreview {
+            // if we have the required permissions, set up the
+            // shared app state
+            if appState.permissionsManager.hasPermission {
+                appState.performSetup()
+            }
         }
     }
 
