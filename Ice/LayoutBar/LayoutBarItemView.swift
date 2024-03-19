@@ -53,19 +53,18 @@ class LayoutBarItemView: NSView {
     }
 
     /// Creates a view that displays the given menu bar item.
-    init(item: MenuBarItem, display: DisplayInfo, itemManager: MenuBarItemManager) async throws {
-        let image: CGImage
+    init?(item: MenuBarItem, display: DisplayInfo, itemManager: MenuBarItemManager) {
+        var image: CGImage?
         if let cachedImage = itemManager.cachedItemImages[item] {
             image = cachedImage
-        } else {
-            try await ScreenCaptureManager.shared.update()
-            let capturedImage = try await ScreenCaptureManager.shared.captureImage(
-                withTimeout: .milliseconds(500),
-                windowPredicate: { $0.windowID == item.windowID },
-                displayPredicate: { $0.displayID == display.displayID }
-            )
-            itemManager.cachedItemImages[item] = capturedImage
+        } else if let capturedImage = CGImage.captureWindow(with: item.windowID) {
             image = capturedImage
+            DispatchQueue.main.async {
+                itemManager.cachedItemImages[item] = capturedImage
+            }
+        }
+        guard let image else {
+            return nil
         }
         self.item = item
         let trimmedImage: NSImage = {
