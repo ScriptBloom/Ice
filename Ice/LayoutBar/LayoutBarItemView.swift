@@ -143,7 +143,7 @@ extension LayoutBarItemView: NSDraggingSource {
         // make sure the container doesn't update its arranged
         // views during a dragging session
         if let container = superview as? LayoutBarContainer {
-            container.canUpdateArrangedViews = false
+            container.canSetArrangedViews = false
         }
 
         // prevent the dragging image from animating back to its

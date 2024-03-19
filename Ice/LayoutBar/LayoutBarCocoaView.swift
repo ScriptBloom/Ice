@@ -32,7 +32,7 @@ class LayoutBarCocoaView: NSView {
         set { container.arrangedViews = newValue }
     }
 
-    /// Creates a layout bar view with the given menu bar manager,
+    /// Creates a layout bar view with the given menu bar item manager,
     /// section, and spacing.
     ///
     /// - Parameters:
@@ -106,13 +106,8 @@ class LayoutBarCocoaView: NSView {
             return false
         }
         DispatchQueue.main.async {
-            self.container.canUpdateArrangedViews = true
+            self.container.canSetArrangedViews = true
         }
-        return moveItem(for: sourceView)
-    }
-
-    /// Moves the item belonging to the given source view.
-    private func moveItem(for sourceView: LayoutBarItemView) -> Bool {
         return true
     }
 }
