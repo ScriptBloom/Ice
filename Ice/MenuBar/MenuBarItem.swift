@@ -46,6 +46,13 @@ struct MenuBarItem {
     let displayName: String
     let acceptsMouseEvents: Bool
 
+    var cacheKey: CacheKey {
+        CacheKey(
+            bundleIdentifier: owningApplication?.bundleIdentifier,
+            title: title
+        )
+    }
+
     /// Creates a menu bar item.
     ///
     /// The parameters passed into this initializer are verified during the menu
@@ -119,5 +126,12 @@ extension MenuBarItem: Hashable {
         hasher.combine(isOnScreen)
         hasher.combine(displayName)
         hasher.combine(acceptsMouseEvents)
+    }
+}
+
+extension MenuBarItem {
+    struct CacheKey: Hashable {
+        let bundleIdentifier: String?
+        let title: String?
     }
 }
