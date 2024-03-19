@@ -31,7 +31,7 @@ extension MenuBarItemConfiguration: Codable {
 
 // MARK: - MenuBarItemInfo
 
-struct MenuBarItemInfo {
+struct MenuBarItemInfo: Hashable {
     let namespace: String
     let title: String
 
