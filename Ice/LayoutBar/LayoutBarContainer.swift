@@ -193,27 +193,34 @@ class LayoutBarContainer: NSView {
     func setArrangedViews() {
         guard
             canSetArrangedViews,
+            let menuBarManager = itemManager.menuBarManager,
+            let profile = menuBarManager.activeProfile,
             let display = DisplayInfo.main
         else {
             return
         }
-        arrangedViews = section.menuBarItems.compactMap { item in
-            StandardLayoutBarItemView(item: item, display: display, itemManager: itemManager)
+
+        var itemInfo = profile.itemInfoForSection(withName: section.name)
+
+        if case .visible = section.name {
+            let stationaryInfo = MenuBarProfile.stationaryItemInfo(menuBarManager: menuBarManager)
+            itemInfo.insert(contentsOf: stationaryInfo, at: 0)
         }
-        if 
-            let menuBarManager = itemManager.menuBarManager,
-            let profile = menuBarManager.activeProfile,
-            let name = profile.correctSectionName(for: .newItems),
-            section.name == name,
-            let index = profile.itemInfoForSection(withName: name).firstIndex(of: .newItems)
-        {
-            let view = SpecialLayoutBarItemView(kind: .newItems)
-            if index >= arrangedViews.endIndex {
-                arrangedViews.append(view)
-            } else if index < arrangedViews.startIndex {
-                arrangedViews.insert(view, at: arrangedViews.startIndex)
+
+        itemInfo.reverse()
+
+        arrangedViews = itemInfo.compactMap { info in
+            if info.isSpecial {
+                switch info {
+                case .newItems:
+                    SpecialLayoutBarItemView(kind: .newItems)
+                default:
+                    nil
+                }
+            } else if let item = section.menuBarItems.first(where: { $0.matches(info) }) {
+                StandardLayoutBarItemView(item: item, display: display, itemManager: itemManager)
             } else {
-                arrangedViews.insert(view, at: index)
+                nil
             }
         }
     }

@@ -155,12 +155,12 @@ class StandardLayoutBarItemView: LayoutBarItemView {
     /// Creates a view that displays the given menu bar item.
     init?(item: MenuBarItem, display: DisplayInfo, itemManager: MenuBarItemManager) {
         var cgImage: CGImage?
-        if let cachedImage = itemManager.cachedItemImages[item.cacheKey] {
+        if let cachedImage = itemManager.cachedItemImages[item.cacheKey()] {
             cgImage = cachedImage
         } else if let capturedImage = CGImage.captureWindow(with: item.windowID) {
             cgImage = capturedImage
             DispatchQueue.main.async {
-                itemManager.cachedItemImages[item.cacheKey] = capturedImage
+                itemManager.cachedItemImages[item.cacheKey()] = capturedImage
             }
         }
 
@@ -174,7 +174,7 @@ class StandardLayoutBarItemView: LayoutBarItemView {
         super.init(frame: NSRect(origin: .zero, size: item.frame.size))
 
         self.toolTip = item.displayName
-        self.isEnabled = item.acceptsMouseEvents
+        self.isEnabled = item.isMovable
 
         // only trim horizontal edges to maintain proper vertical centering
         // due to the status item shadow offsetting the trim
@@ -215,7 +215,11 @@ class SpecialLayoutBarItemView: LayoutBarItemView {
         }
     }
 
+    let kind: Kind
+
     init(kind: Kind) {
+        self.kind = kind
+
         let labelAttributes: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: NSFont.systemFontSize),
             .foregroundColor: NSColor.white,

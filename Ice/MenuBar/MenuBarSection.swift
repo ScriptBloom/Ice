@@ -124,7 +124,7 @@ final class MenuBarSection: ObservableObject {
 
         if case .visible = name {
             let filtered = items.filter { item in
-                !item.acceptsMouseEvents
+                !item.isMovable
             }
             menuBarItems.append(contentsOf: filtered)
         }

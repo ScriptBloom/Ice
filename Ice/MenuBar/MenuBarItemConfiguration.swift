@@ -38,6 +38,21 @@ struct MenuBarItemInfo: Hashable {
     var isSpecial: Bool {
         namespace == Self.specialNamespace
     }
+
+    init(namespace: String, title: String) {
+        self.namespace = namespace
+        self.title = title
+    }
+
+    init?(item: MenuBarItem) {
+        guard
+            let namespace = item.owningApplication?.bundleIdentifier,
+            let title = item.title
+        else {
+            return nil
+        }
+        self.init(namespace: namespace, title: title)
+    }
 }
 
 // MARK: MenuBarItemInfo Constants

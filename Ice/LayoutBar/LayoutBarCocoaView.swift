@@ -80,6 +80,40 @@ class LayoutBarCocoaView: NSView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    /// Updates the active profile with the current arranged views.
+    func updateProfile() -> Bool {
+        guard let profile = section.menuBarManager?.activeProfile else {
+            return false
+        }
+
+        let currentItems: [MenuBarItemInfo] = container.arrangedViews.reversed().compactMap { view in
+            if let standardView = view as? StandardLayoutBarItemView {
+                guard standardView.item.isMovable else {
+                    return nil
+                }
+                return MenuBarItemInfo(item: standardView.item)
+            } else if let specialView = view as? SpecialLayoutBarItemView {
+                switch specialView.kind {
+                case .newItems:
+                    return .newItems
+                }
+            } else {
+                return nil
+            }
+        }
+
+        switch section.name {
+        case .visible:
+            profile.itemConfiguration.visibleItems = currentItems
+        case .hidden:
+            profile.itemConfiguration.hiddenItems = currentItems
+        case .alwaysHidden:
+            profile.itemConfiguration.alwaysHiddenItems = currentItems
+        }
+
+        return true
+    }
+
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
         container.updateArrangedViewsForDrag(with: sender, phase: .entered)
     }
@@ -99,15 +133,14 @@ class LayoutBarCocoaView: NSView {
     }
 
     override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
-        guard
-            let sourceView = sender.draggingSource as? LayoutBarItemView,
-            sender.draggingSourceOperationMask == .move
-        else {
+        defer {
+            DispatchQueue.main.async {
+                self.container.canSetArrangedViews = true
+            }
+        }
+        guard sender.draggingSourceOperationMask == .move else {
             return false
         }
-        DispatchQueue.main.async {
-            self.container.canSetArrangedViews = true
-        }
-        return true
+        return updateProfile()
     }
 }
