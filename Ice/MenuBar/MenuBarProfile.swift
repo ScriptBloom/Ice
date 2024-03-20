@@ -26,6 +26,33 @@ final class MenuBarProfile {
             }
         }
     }
+
+    /// Returns the name for the menu bar section that should contain the
+    /// given item according to the profile.
+    func correctSectionName(for item: MenuBarItemInfo) -> MenuBarSection.Name? {
+        if itemConfiguration.visibleItems.contains(item) {
+            return .visible
+        }
+        if itemConfiguration.hiddenItems.contains(item) {
+            return .hidden
+        }
+        if itemConfiguration.alwaysHiddenItems.contains(item) {
+            return .alwaysHidden
+        }
+        return nil
+    }
+
+    /// Returns the item info for the section with the given name.
+    func itemInfoForSection(withName name: MenuBarSection.Name) -> [MenuBarItemInfo] {
+        switch name {
+        case .visible:
+            itemConfiguration.visibleItems
+        case .hidden:
+            itemConfiguration.hiddenItems
+        case .alwaysHidden:
+            itemConfiguration.alwaysHiddenItems
+        }
+    }
 }
 
 extension MenuBarProfile {
