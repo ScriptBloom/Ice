@@ -203,10 +203,14 @@ class LayoutBarContainer: NSView {
         var itemInfo = profile.itemInfoForSection(withName: section.name)
 
         if case .visible = section.name {
+            // get the stationary items (i.e. Clock, Siri, Control Center)
+            // and prepend them to the item info
             let stationaryInfo = MenuBarProfile.stationaryItemInfo(menuBarManager: menuBarManager)
             itemInfo.insert(contentsOf: stationaryInfo, at: 0)
         }
 
+        // we need to reverse the item info, as profiles represent items
+        // in reverse order from how they are displayed
         itemInfo.reverse()
 
         arrangedViews = itemInfo.compactMap { info in
@@ -281,7 +285,9 @@ class LayoutBarContainer: NSView {
             let midX = destinationView.frame.midX
             let offset = destinationView.frame.width / 2
             if !((midX - offset)...(midX + offset)).contains(draggingLocation.x) {
-                return .move
+                if sourceView.oldContainerInfo?.container === self {
+                    return .move
+                }
             }
             if let sourceIndex = arrangedViews.firstIndex(of: sourceView) {
                 // source view is already inside this container, so move
