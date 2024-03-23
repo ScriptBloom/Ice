@@ -60,7 +60,7 @@ final class MenuBarSection: ObservableObject {
     private func configureCancellables() {
         var c = Set<AnyCancellable>()
 
-        Timer.publish(every: 5, on: .main, in: .default)
+        Timer.publish(every: 3, on: .main, in: .default)
             .autoconnect()
             .sink { [weak self] _ in
                 self?.updateMenuBarItems()
@@ -104,8 +104,8 @@ final class MenuBarSection: ObservableObject {
         itemInfo.reverse()
 
         let items = menuBarManager.itemManager.getMenuBarItems(for: display, onScreenOnly: false)
-        var menuBarItems = itemInfo.compactMap { info in
-            items.first { item in
+        var menuBarItems = items.filter { item in
+            itemInfo.contains { info in
                 item.owningApplication?.bundleIdentifier == info.namespace &&
                 item.title == info.title
             }

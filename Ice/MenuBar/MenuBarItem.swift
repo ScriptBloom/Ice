@@ -95,3 +95,29 @@ struct MenuBarItem {
         self.acceptsMouseEvents = !disabledDisplayNames.contains(displayName)
     }
 }
+
+// MARK: MenuBarItem: Equatable
+extension MenuBarItem: Equatable {
+    static func == (lhs: MenuBarItem, rhs: MenuBarItem) -> Bool {
+        lhs.windowID == rhs.windowID &&
+        NSStringFromRect(lhs.frame) == NSStringFromRect(rhs.frame) &&
+        lhs.title == rhs.title &&
+        lhs.owningApplication?.bundleIdentifier == rhs.owningApplication?.bundleIdentifier &&
+        lhs.isOnScreen == rhs.isOnScreen &&
+        lhs.displayName == rhs.displayName &&
+        lhs.acceptsMouseEvents == rhs.acceptsMouseEvents
+    }
+}
+
+// MARK: MenuBarItem: Hashable
+extension MenuBarItem: Hashable {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(windowID)
+        hasher.combine(NSStringFromRect(frame))
+        hasher.combine(title)
+        hasher.combine(owningApplication?.bundleIdentifier)
+        hasher.combine(isOnScreen)
+        hasher.combine(displayName)
+        hasher.combine(acceptsMouseEvents)
+    }
+}

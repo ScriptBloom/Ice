@@ -7,13 +7,13 @@ import SwiftUI
 
 struct LayoutBar: View {
     private struct Representable: NSViewRepresentable {
-        let menuBarItemManager: MenuBarItemManager
+        let itemManager: MenuBarItemManager
         let section: MenuBarSection
         let spacing: CGFloat
 
         func makeNSView(context: Context) -> LayoutBarScrollView {
             LayoutBarScrollView(
-                menuBarItemManager: menuBarItemManager,
+                itemManager: itemManager,
                 section: section,
                 spacing: spacing
             )
@@ -44,7 +44,7 @@ struct LayoutBar: View {
 
     var body: some View {
         Representable(
-            menuBarItemManager: menuBarManager.itemManager,
+            itemManager: menuBarManager.itemManager,
             section: section,
             spacing: spacing
         )

@@ -48,7 +48,7 @@ class LayoutBarContainer: NSView {
     }()
 
     /// The shared menu bar item manager instance.
-    let menuBarItemManager: MenuBarItemManager
+    let itemManager: MenuBarItemManager
 
     /// The section whose items are represented.
     let section: MenuBarSection
@@ -83,15 +83,15 @@ class LayoutBarContainer: NSView {
 
     private var cancellables = Set<AnyCancellable>()
 
-    /// Creates a container view with the given menu bar manager,
+    /// Creates a container view with the given menu bar item manager,
     /// section, and spacing.
     ///
     /// - Parameters:
-    ///   - menuBarManager: The shared menu bar manager instance.
+    ///   - itemManager: The shared menu bar item manager instance.
     ///   - section: The section whose items are represented.
     ///   - spacing: The amount of space between each arranged view.
-    init(menuBarItemManager: MenuBarItemManager, section: MenuBarSection, spacing: CGFloat) {
-        self.menuBarItemManager = menuBarItemManager
+    init(itemManager: MenuBarItemManager, section: MenuBarSection, spacing: CGFloat) {
+        self.itemManager = itemManager
         self.section = section
         self.spacing = spacing
         super.init(frame: .zero)
@@ -109,8 +109,9 @@ class LayoutBarContainer: NSView {
     private func configureCancellables() {
         var c = Set<AnyCancellable>()
 
-        Timer.publish(every: 5, on: .main, in: .default)
+        Timer.publish(every: 3, on: .main, in: .default)
             .autoconnect()
+            .delay(for: 0.1, scheduler: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.updateArrangedViews()
             }
@@ -197,8 +198,12 @@ class LayoutBarContainer: NSView {
             var arrangedViews = [LayoutBarItemView]()
             for item in section.menuBarItems {
                 do {
-                    let view = try await LayoutBarItemView(item: item, display: display)
-                    arrangedViews.append(view)
+                    let itemView = try await LayoutBarItemView(
+                        item: item,
+                        display: display,
+                        itemManager: itemManager
+                    )
+                    arrangedViews.append(itemView)
                 } catch {
                     continue
                 }

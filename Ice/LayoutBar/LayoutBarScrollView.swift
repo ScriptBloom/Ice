@@ -28,12 +28,12 @@ class LayoutBarScrollView: NSScrollView {
     /// manager, section and spacing.
     ///
     /// - Parameters:
-    ///   - menuBarItemManager: The shared menu bar item manager instance.
+    ///   - itemManager: The shared menu bar item manager instance.
     ///   - section: The section whose items are represented.
     ///   - spacing: The amount of space between each arranged view.
-    init(menuBarItemManager: MenuBarItemManager, section: MenuBarSection, spacing: CGFloat) {
+    init(itemManager: MenuBarItemManager, section: MenuBarSection, spacing: CGFloat) {
         self.layoutBarView = LayoutBarCocoaView(
-            menuBarItemManager: menuBarItemManager,
+            itemManager: itemManager,
             section: section,
             spacing: spacing
         )
