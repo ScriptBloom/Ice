@@ -13,6 +13,9 @@ final class MenuBarManager: ObservableObject {
     /// The maximum X coordinate of the menu bar's main menu.
     @Published private(set) var mainMenuMaxX: CGFloat = 0
 
+    /// The average color of the menu bar.
+    @Published var averageColor: CGColor?
+
     private(set) var sections = [MenuBarSection]()
 
     private(set) weak var appState: AppState?
@@ -159,6 +162,13 @@ final class MenuBarManager: ObservableObject {
             }
             .store(in: &c)
 
+        Timer.publish(every: 5, on: .main, in: .default)
+            .autoconnect()
+            .sink { [weak self] _ in
+                self?.updateAverageColor()
+            }
+            .store(in: &c)
+
         // propagate changes from child observable objects
         itemManager.objectWillChange
             .sink { [weak self] in
@@ -181,6 +191,23 @@ final class MenuBarManager: ObservableObject {
         }
 
         cancellables = c
+    }
+
+    /// Calculates and stores the average color of the area of the
+    /// desktop wallpaper behind the menu bar.
+    private func updateAverageColor() {
+        Task { @MainActor in
+            guard
+                let display = DisplayInfo.main,
+                let wallpaper = try await ScreenCaptureManager.shared.desktopWallpaperBelowMenuBar(for: display),
+                let color = wallpaper.averageColor(accuracy: .low, algorithm: .simple, options: .ignoreAlpha)
+            else {
+                return
+            }
+            if averageColor != color {
+                averageColor = color
+            }
+        }
     }
 
     /// Shows the right-click menu.
