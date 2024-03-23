@@ -98,7 +98,6 @@ class LayoutBarContainer: NSView {
         self.translatesAutoresizingMaskIntoConstraints = false
         unregisterDraggedTypes()
         configureCancellables()
-        updateArrangedViews()
     }
 
     @available(*, unavailable)
@@ -109,11 +108,10 @@ class LayoutBarContainer: NSView {
     private func configureCancellables() {
         var c = Set<AnyCancellable>()
 
-        Timer.publish(every: 3, on: .main, in: .default)
-            .autoconnect()
-            .delay(for: 0.1, scheduler: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.updateArrangedViews()
+        section.$menuBarItems
+            .removeDuplicates()
+            .sink { [weak self] menuBarItems in
+                self?.updateArrangedViews(menuBarItems: menuBarItems)
             }
             .store(in: &c)
 
@@ -186,29 +184,15 @@ class LayoutBarContainer: NSView {
         heightConstraint.constant = maxHeight
     }
 
-    func updateArrangedViews() {
+    func updateArrangedViews(menuBarItems: [MenuBarItem]) {
         guard
             canUpdateArrangedViews,
             let display = DisplayInfo.main
         else {
             return
         }
-
-        Task {
-            var arrangedViews = [LayoutBarItemView]()
-            for item in section.menuBarItems {
-                do {
-                    let itemView = try await LayoutBarItemView(
-                        item: item,
-                        display: display,
-                        itemManager: itemManager
-                    )
-                    arrangedViews.append(itemView)
-                } catch {
-                    continue
-                }
-            }
-            self.arrangedViews = arrangedViews
+        arrangedViews = menuBarItems.compactMap { item in
+            LayoutBarItemView(item: item, display: display, itemManager: itemManager)
         }
     }
 
