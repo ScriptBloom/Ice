@@ -36,6 +36,12 @@ private func bestDisplayName(for window: WindowInfo) -> String {
     }
 }
 
+private let disabledDisplayNames = [
+    "Clock",
+    "Siri",
+    "Control Center",
+]
+
 /// A type that represents an item in a menu bar.
 struct MenuBarItem {
     let windowID: CGWindowID
@@ -86,19 +92,12 @@ struct MenuBarItem {
             return nil
         }
 
-        let displayName = bestDisplayName(for: itemWindow)
-        let disabledDisplayNames = [
-            "Clock",
-            "Siri",
-            "Control Center",
-        ]
-
         self.windowID = itemWindow.windowID
         self.frame = itemWindow.frame
         self.title = itemWindow.title
         self.owningApplication = itemWindow.owningApplication
         self.isOnScreen = itemWindow.isOnScreen
-        self.displayName = displayName
+        self.displayName = bestDisplayName(for: itemWindow)
         self.acceptsMouseEvents = !disabledDisplayNames.contains(displayName)
     }
 }

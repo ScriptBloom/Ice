@@ -60,8 +60,8 @@ class LayoutBarContainer: NSView {
     var shouldAnimateNextLayoutPass = true
 
     /// A Boolean value that indicates whether the container can
-    /// update its arranged views.
-    var canUpdateArrangedViews = true
+    /// set its arranged views.
+    var canSetArrangedViews = true
 
     /// The amount of space between each arranged view.
     var spacing: CGFloat {
@@ -111,7 +111,7 @@ class LayoutBarContainer: NSView {
         section.$menuBarItems
             .removeDuplicates()
             .sink { [weak self] menuBarItems in
-                self?.updateArrangedViews(menuBarItems: menuBarItems)
+                self?.setArrangedViews(from: menuBarItems)
             }
             .store(in: &c)
 
@@ -184,9 +184,17 @@ class LayoutBarContainer: NSView {
         heightConstraint.constant = maxHeight
     }
 
-    func updateArrangedViews(menuBarItems: [MenuBarItem]) {
+    /// Sets the container's arranged views from the given array of
+    /// menu bar items.
+    ///
+    /// - Note: If the value of the container's ``canSetArrangedViews``
+    ///   property is `false`, this function returns early.
+    ///
+    /// - Parameter menuBarItems: An array of menu bar items to use
+    ///   to create the container's arranged views.
+    func setArrangedViews(from menuBarItems: [MenuBarItem]) {
         guard
-            canUpdateArrangedViews,
+            canSetArrangedViews,
             let display = DisplayInfo.main
         else {
             return
