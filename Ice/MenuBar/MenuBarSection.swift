@@ -87,41 +87,38 @@ final class MenuBarSection: ObservableObject {
         guard
             controlItem.isVisible,
             let menuBarManager,
+            let activeProfile = menuBarManager.activeProfile,
             let display = DisplayInfo.main
         else {
             return
         }
 
-        let items = menuBarManager.itemManager.getMenuBarItems(for: display, onScreenOnly: false)
-
-        switch name {
+        var itemInfo = switch name {
         case .visible:
-            guard
-                let hiddenSection = menuBarManager.section(withName: .hidden),
-                let hiddenControlItem = items.first(where: { $0.windowID == hiddenSection.controlItem.windowID })
-            else {
-                menuBarItems = []
-                break
-            }
-            menuBarItems = items.filter { item in
-                item.frame.minX >= hiddenControlItem.frame.maxX
-            }
+            activeProfile.itemConfiguration.visibleItems
         case .hidden:
-            guard
-                let alwaysHiddenSection = menuBarManager.section(withName: .alwaysHidden),
-                let hiddenControlItem = items.first(where: { $0.windowID == controlItem.windowID }),
-                let alwaysHiddenControlItem = items.first(where: { $0.windowID == alwaysHiddenSection.controlItem.windowID })
-            else {
-                menuBarItems = []
-                break
-            }
-            menuBarItems = items.filter { item in
-                item.frame.maxX >= hiddenControlItem.frame.minX &&
-                item.frame.minX <= alwaysHiddenControlItem.frame.maxX
-            }
+            activeProfile.itemConfiguration.hiddenItems
         case .alwaysHidden:
-            menuBarItems = []
+            activeProfile.itemConfiguration.alwaysHiddenItems
         }
+        itemInfo.reverse()
+
+        let items = menuBarManager.itemManager.getMenuBarItems(for: display, onScreenOnly: false)
+        var menuBarItems = itemInfo.compactMap { info in
+            items.first { item in
+                item.owningApplication?.bundleIdentifier == info.namespace &&
+                item.title == info.title
+            }
+        }
+
+        if case .visible = name {
+            let filtered = items.filter { item in
+                !item.acceptsMouseEvents
+            }
+            menuBarItems.append(contentsOf: filtered)
+        }
+
+        self.menuBarItems = menuBarItems
     }
 
     /// Assigns the section's app state.
