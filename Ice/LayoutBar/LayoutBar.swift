@@ -57,6 +57,11 @@ struct LayoutBar: View {
         .clipShape(
             RoundedRectangle(cornerRadius: 9)
         )
+        .onAppear {
+            for section in menuBarManager.sections {
+                section.show()
+            }
+        }
     }
 
     @ViewBuilder
