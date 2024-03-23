@@ -197,17 +197,7 @@ class LayoutBarContainer: NSView {
             var arrangedViews = [LayoutBarItemView]()
             for item in section.menuBarItems {
                 do {
-                    let image = try await ScreenCaptureManager.shared.captureImage(
-                        withTimeout: .milliseconds(500),
-                        windowPredicate: { $0.windowID == item.windowID },
-                        displayPredicate: { $0.displayID == display.displayID }
-                    )
-                    let view = LayoutBarItemView(
-                        item: item,
-                        image: NSImage(cgImage: image, size: item.frame.size),
-                        toolTip: item.displayName,
-                        isEnabled: item.acceptsMouseEvents
-                    )
+                    let view = try await LayoutBarItemView(item: item, display: display)
                     arrangedViews.append(view)
                 } catch {
                     continue
@@ -230,18 +220,15 @@ class LayoutBarContainer: NSView {
         }
         switch phase {
         case .entered:
-            canUpdateArrangedViews = false
             shouldAnimateNextLayoutPass = false
             return updateArrangedViewsForDrag(with: draggingInfo, phase: .updated)
         case .exited:
-            canUpdateArrangedViews = true
             if let sourceIndex = arrangedViews.firstIndex(of: sourceView) {
                 shouldAnimateNextLayoutPass = false
                 arrangedViews.remove(at: sourceIndex)
             }
             return .move
         case .updated:
-            canUpdateArrangedViews = false
             if
                 sourceView.oldContainerInfo == nil,
                 let sourceIndex = arrangedViews.firstIndex(of: sourceView)
@@ -290,7 +277,6 @@ class LayoutBarContainer: NSView {
             }
             return .move
         case .ended:
-            canUpdateArrangedViews = true
             return .move
         }
     }
