@@ -68,12 +68,25 @@ class LayoutBarItemView: NSView {
             image = capturedImage
         }
         self.item = item
-        // only trim horizontal edges to maintain proper vertical
-        // centering due to status item shadow offsetting the trim
-        let trimmedImage = image.trimmingTransparentPixels(edges: [.minXEdge, .maxXEdge])
-        self.image = NSImage(cgImage: trimmedImage ?? image, size: item.frame.size)
-        // set the frame to the full image size; the trimmed image
-        // will be centered within the full bounds when displayed
+        let trimmedImage: NSImage = {
+            // only trim horizontal edges to maintain proper vertical centering
+            // due to the status item shadow offsetting the trim
+            let cgImage = image.trimmingTransparentPixels(edges: [.minXEdge, .maxXEdge]) ?? image
+            return NSImage(cgImage: cgImage, size: item.frame.size)
+        }()
+        let centeredImage = NSImage(size: item.frame.size, flipped: false) { rect in
+            let centeredRect = CGRect(
+                x: rect.midX - (trimmedImage.size.width / 2),
+                y: rect.midY - (trimmedImage.size.height / 2),
+                width: trimmedImage.size.width,
+                height: trimmedImage.size.height
+            )
+            trimmedImage.draw(in: centeredRect)
+            return true
+        }
+        self.image = centeredImage
+        // set the frame to the full item frame size; the trimmed image will
+        // be centered within the full bounds when displayed
         super.init(frame: NSRect(origin: .zero, size: item.frame.size))
         self.toolTip = item.displayName
         self.isEnabled = item.acceptsMouseEvents
@@ -85,23 +98,9 @@ class LayoutBarItemView: NSView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    private func createImageForDisplay(from image: NSImage) -> NSImage {
-        NSImage(size: bounds.size, flipped: false) { bounds in
-            let rect = CGRect(
-                x: bounds.midX - (image.size.width / 2),
-                y: bounds.midY - (image.size.height / 2),
-                width: image.size.width,
-                height: image.size.height
-            )
-            image.draw(in: rect)
-            return true
-        }
-    }
-
     override func draw(_ dirtyRect: NSRect) {
         if !isDraggingPlaceholder {
-            let displayImage = createImageForDisplay(from: image)
-            displayImage.draw(
+            image.draw(
                 in: bounds,
                 from: .zero,
                 operation: .sourceOver,
@@ -129,7 +128,7 @@ class LayoutBarItemView: NSView {
         pasteboardItem.setData(Data(), forType: .layoutBarItem)
 
         let draggingItem = NSDraggingItem(pasteboardWriter: pasteboardItem)
-        draggingItem.setDraggingFrame(bounds, contents: createImageForDisplay(from: image))
+        draggingItem.setDraggingFrame(bounds, contents: image)
 
         beginDraggingSession(with: [draggingItem], event: event, source: self)
     }
