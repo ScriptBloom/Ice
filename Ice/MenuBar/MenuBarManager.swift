@@ -63,8 +63,9 @@ final class MenuBarManager: ObservableObject {
 
     private func loadInitialState() {
         Defaults.ifPresent(key: .activeProfileName, assign: &activeProfileName)
-        Defaults.ifPresent(key: .profiles) { data in
+        Defaults.ifPresent(key: .profiles) { array in
             do {
+                let data = try PropertyListSerialization.data(fromPropertyList: array, format: .xml, options: 0)
                 profiles = try PropertyListDecoder().decode([MenuBarProfile].self, from: data)
             } catch {
                 Logger.menuBarManager.error("Error decoding menu bar profiles: \(error)")
@@ -110,8 +111,8 @@ final class MenuBarManager: ObservableObject {
     private func saveProfiles() {
         do {
             let data = try PropertyListEncoder().encode(profiles)
-            let dict = try PropertyListSerialization.propertyList(from: data, format: nil)
-            Defaults.set(dict, forKey: .profiles)
+            let array = try PropertyListSerialization.propertyList(from: data, format: nil)
+            Defaults.set(array, forKey: .profiles)
         } catch {
             Logger.menuBarManager.error("Error encoding menu bar profiles: \(error)")
         }
@@ -233,6 +234,15 @@ final class MenuBarManager: ObservableObject {
                 self?.saveProfiles()
             }
             .store(in: &c)
+
+        for profile in profiles {
+            profile.objectWillChange
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] in
+                    self?.saveProfiles()
+                }
+                .store(in: &c)
+        }
 
         // propagate changes from child observable objects
         itemManager.objectWillChange

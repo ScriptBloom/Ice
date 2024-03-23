@@ -3,13 +3,14 @@
 //  Ice
 //
 
+import Combine
 import CoreGraphics
 
 // MARK: - MenuBarProfile
 
-final class MenuBarProfile {
-    var name: String
-    var itemConfiguration: MenuBarItemConfiguration
+final class MenuBarProfile: ObservableObject {
+    @Published var name: String
+    @Published var itemConfiguration: MenuBarItemConfiguration
 
     init(name: String, itemConfiguration: MenuBarItemConfiguration) {
         self.name = name
@@ -56,21 +57,42 @@ final class MenuBarProfile {
 }
 
 extension MenuBarProfile {
+    /// Returns the item info representing the items that macOS does not
+    /// allow to be moved.
+    ///
+    /// - Note: This function returns the items in the reverse order that
+    ///   they appear in the menu bar.
+    static func stationaryItemInfo(menuBarManager: MenuBarManager) -> [MenuBarItemInfo] {
+        guard let visibleSection = menuBarManager.section(withName: .visible) else {
+            return []
+        }
+        var allInfo = [MenuBarItemInfo]()
+        for item in visibleSection.menuBarItems.reversed() {
+            if item.isMovable {
+                break
+            }
+            guard let info = MenuBarItemInfo(item: item) else {
+                continue
+            }
+            allInfo.append(info)
+        }
+        return allInfo
+    }
+}
+
+extension MenuBarProfile {
     /// Gets the current menu bar item information, for use in a profile.
     ///
     /// - Parameters:
     ///   - itemManager: The menu bar item manager to use to get the items.
     ///   - display: The display to get the items for.
-    static func getCurrentMenuBarItemInfo(itemManager: MenuBarItemManager, display: DisplayInfo) -> [MenuBarItemInfo] {
+    static func getCurrentItemInfo(itemManager: MenuBarItemManager, display: DisplayInfo) -> [MenuBarItemInfo] {
         let items = itemManager.getMenuBarItems(for: display, onScreenOnly: false)
-        let info: [MenuBarItemInfo] = items.compactMap { item in
+        let allInfo: [MenuBarItemInfo] = items.compactMap { item in
             guard
                 // immovable items and items owned by Ice should not be included in profiles
-                item.acceptsMouseEvents,
-                item.owningApplication != .current,
-                // items without a bundle identifier or title should not be included in profiles
-                let namespace = item.owningApplication?.bundleIdentifier,
-                let title = item.title
+                item.isMovable,
+                item.owningApplication != .current
             else {
                 return nil
             }
@@ -83,11 +105,11 @@ extension MenuBarProfile {
                 return nil
             }
 
-            return MenuBarItemInfo(namespace: namespace, title: title)
+            return MenuBarItemInfo(item: item)
         }
 
         // profiles represent items in reversed order from how they appear on screen
-        return info.reversed()
+        return allInfo.reversed()
     }
 }
 
@@ -100,7 +122,7 @@ extension MenuBarProfile {
     /// item manager and display to read the current menu bar items.
     static func createDefaultProfile(with itemManager: MenuBarItemManager, display: DisplayInfo) -> MenuBarProfile {
         let profile = MenuBarProfile(name: defaultProfileName, itemConfiguration: .defaultConfiguration)
-        let info = getCurrentMenuBarItemInfo(itemManager: itemManager, display: display)
+        let info = getCurrentItemInfo(itemManager: itemManager, display: display)
         profile.addItems(info)
         return profile
     }
@@ -111,5 +133,19 @@ extension MenuBarProfile: Codable {
     private enum CodingKeys: String, CodingKey {
         case name = "Name"
         case itemConfiguration = "Items"
+    }
+
+    convenience init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        try self.init(
+            name: container.decode(String.self, forKey: .name),
+            itemConfiguration: container.decode(MenuBarItemConfiguration.self, forKey: .itemConfiguration)
+        )
+    }
+
+    func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(name, forKey: .name)
+        try container.encode(itemConfiguration, forKey: .itemConfiguration)
     }
 }
