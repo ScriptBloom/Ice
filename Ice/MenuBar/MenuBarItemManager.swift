@@ -7,8 +7,6 @@ import Cocoa
 import Combine
 
 class MenuBarItemManager: ObservableObject {
-    @Published private(set) var configuration = MenuBarItemConfiguration()
-
     private(set) weak var menuBarManager: MenuBarManager?
 
     init(menuBarManager: MenuBarManager) {
