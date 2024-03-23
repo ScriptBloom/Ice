@@ -65,8 +65,8 @@ struct LayoutBar: View {
             Color(cgColor: averageColor)
                 .overlay(
                     Material.bar
-                        .opacity(0.2)
-                        .blendMode(.multiply)
+                        .opacity(0.5)
+                        .blendMode(.softLight)
                 )
         } else {
             Color.defaultLayoutBar
