@@ -11,6 +11,8 @@ import OSLog
 final class MenuBarSection: ObservableObject {
     @Published private(set) var isHidden: Bool
 
+    @Published private(set) var menuBarItems = [MenuBarItem]()
+
     let name: Name
 
     let controlItem: ControlItem
@@ -39,6 +41,7 @@ final class MenuBarSection: ObservableObject {
         self.controlItem = controlItem
         self.isHidden = controlItem.state == .hideItems
         configureCancellables()
+        updateMenuBarItems()
     }
 
     /// Creates a menu bar section with the given name.
@@ -57,6 +60,13 @@ final class MenuBarSection: ObservableObject {
     private func configureCancellables() {
         var c = Set<AnyCancellable>()
 
+        Timer.publish(every: 5, on: .main, in: .default)
+            .autoconnect()
+            .sink { [weak self] _ in
+                self?.updateMenuBarItems()
+            }
+            .store(in: &c)
+
         controlItem.$state
             .sink { [weak self] state in
                 self?.isHidden = state == .hideItems
@@ -71,6 +81,47 @@ final class MenuBarSection: ObservableObject {
             .store(in: &c)
 
         cancellables = c
+    }
+
+    private func updateMenuBarItems() {
+        guard
+            controlItem.isVisible,
+            let menuBarManager,
+            let display = DisplayInfo.main
+        else {
+            return
+        }
+
+        let items = menuBarManager.itemManager.getMenuBarItems(for: display, onScreenOnly: false)
+
+        switch name {
+        case .visible:
+            guard
+                let hiddenSection = menuBarManager.section(withName: .hidden),
+                let hiddenControlItem = items.first(where: { $0.windowID == hiddenSection.controlItem.windowID })
+            else {
+                menuBarItems = []
+                break
+            }
+            menuBarItems = items.filter { item in
+                item.frame.minX >= hiddenControlItem.frame.maxX
+            }
+        case .hidden:
+            guard
+                let alwaysHiddenSection = menuBarManager.section(withName: .alwaysHidden),
+                let hiddenControlItem = items.first(where: { $0.windowID == controlItem.windowID }),
+                let alwaysHiddenControlItem = items.first(where: { $0.windowID == alwaysHiddenSection.controlItem.windowID })
+            else {
+                menuBarItems = []
+                break
+            }
+            menuBarItems = items.filter { item in
+                item.frame.maxX >= hiddenControlItem.frame.minX &&
+                item.frame.minX <= alwaysHiddenControlItem.frame.maxX
+            }
+        case .alwaysHidden:
+            menuBarItems = []
+        }
     }
 
     /// Assigns the section's app state.
