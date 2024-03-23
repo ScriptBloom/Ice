@@ -89,7 +89,7 @@ private struct CustomTabButton: View {
         Button {
             selection = index
         } label: {
-            tab.label
+            tab.label(selection == index)
         }
         .customButtonConfiguration { configuration in
             configuration.bezelOpacity = isSelected ? 1 : isHovering ? 0.5 : 0
