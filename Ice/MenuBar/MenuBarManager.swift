@@ -235,6 +235,14 @@ final class MenuBarManager: ObservableObject {
             }
             .store(in: &c)
 
+        $averageColor
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.itemManager.cachedItemImages.removeAll()
+            }
+            .store(in: &c)
+
         for profile in profiles {
             profile.objectWillChange
                 .receive(on: DispatchQueue.main)

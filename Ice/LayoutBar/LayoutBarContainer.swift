@@ -117,6 +117,13 @@ class LayoutBarContainer: NSView {
             }
             .store(in: &c)
 
+        itemManager.$cachedItemImages
+            .throttle(for: 0.1, scheduler: DispatchQueue.main, latest: true)
+            .sink { [weak self] _ in
+                self?.setArrangedViews()
+            }
+            .store(in: &c)
+
         cancellables = c
     }
 
