@@ -5,6 +5,37 @@
 
 import Cocoa
 
+private func bestDisplayName(for window: WindowInfo) -> String {
+    guard let application = window.owningApplication else {
+        return window.title ?? ""
+    }
+    var bestName: String {
+        application.localizedName ?? application.bundleIdentifier ?? ""
+    }
+    guard let title = window.title else {
+        return bestName
+    }
+    // by default, use the application name, but handle some special cases
+    return switch application.bundleIdentifier {
+    case "com.apple.controlcenter":
+        if title == "BentoBox" { // Control Center icon
+            bestName
+        } else if title == "NowPlaying" {
+            "Now Playing"
+        } else {
+            title
+        }
+    case "com.apple.systemuiserver":
+        if title == "TimeMachine.TMMenuExtraHost" {
+            "Time Machine"
+        } else {
+            title
+        }
+    default:
+        bestName
+    }
+}
+
 /// A type that represents an item in a menu bar.
 struct MenuBarItem {
     let windowID: CGWindowID
@@ -12,6 +43,8 @@ struct MenuBarItem {
     let title: String?
     let owningApplication: NSRunningApplication?
     let isOnScreen: Bool
+    let displayName: String
+    let acceptsMouseEvents: Bool
 
     /// Creates a menu bar item.
     ///
@@ -46,10 +79,19 @@ struct MenuBarItem {
             return nil
         }
 
+        let displayName = bestDisplayName(for: itemWindow)
+        let disabledDisplayNames = [
+            "Clock",
+            "Siri",
+            "Control Center",
+        ]
+
         self.windowID = itemWindow.windowID
         self.frame = itemWindow.frame
         self.title = itemWindow.title
         self.owningApplication = itemWindow.owningApplication
         self.isOnScreen = itemWindow.isOnScreen
+        self.displayName = displayName
+        self.acceptsMouseEvents = !disabledDisplayNames.contains(displayName)
     }
 }
