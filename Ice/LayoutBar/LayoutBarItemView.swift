@@ -55,12 +55,12 @@ class LayoutBarItemView: NSView {
     /// Creates a view that displays the given menu bar item.
     init?(item: MenuBarItem, display: DisplayInfo, itemManager: MenuBarItemManager) {
         var image: CGImage?
-        if let cachedImage = itemManager.cachedItemImages[item] {
+        if let cachedImage = itemManager.cachedItemImages[item.cacheKey] {
             image = cachedImage
         } else if let capturedImage = CGImage.captureWindow(with: item.windowID) {
             image = capturedImage
             DispatchQueue.main.async {
-                itemManager.cachedItemImages[item] = capturedImage
+                itemManager.cachedItemImages[item.cacheKey] = capturedImage
             }
         }
         guard let image else {

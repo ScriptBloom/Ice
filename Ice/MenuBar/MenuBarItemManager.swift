@@ -11,7 +11,7 @@ class MenuBarItemManager: ObservableObject {
 
     private var cancellables = Set<AnyCancellable>()
 
-    @Published var cachedItemImages = [MenuBarItem: CGImage]()
+    @Published var cachedItemImages = [MenuBarItem.CacheKey: CGImage]()
 
     init(menuBarManager: MenuBarManager) {
         self.menuBarManager = menuBarManager
