@@ -154,6 +154,11 @@ extension Defaults {
         case showSectionDividers = "ShowSectionDividers"
         case canToggleAlwaysHiddenSection = "CanToggleAlwaysHiddenSection"
 
+        // MARK: Menu Bar Profiles
+
+        case profiles = "Profiles"
+        case activeProfileName = "ActiveProfileName"
+
         // MARK: Menu Bar Appearance Settings
 
         case menuBarAppearanceConfiguration = "MenuBarAppearanceConfiguration"

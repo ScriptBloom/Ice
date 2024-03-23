@@ -10,6 +10,15 @@ import SwiftUI
 
 /// Manager for the state of the menu bar.
 final class MenuBarManager: ObservableObject {
+    /// All saved menu bar profiles.
+    @Published var profiles = [MenuBarProfile.defaultProfile]
+
+    /// The name of the currently active menu bar profile.
+    @Published var activeProfileName = MenuBarProfile.defaultProfile.name
+
+    /// The currently active menu bar profile.
+    @Published var activeProfile: MenuBarProfile = .defaultProfile
+
     /// The maximum X coordinate of the menu bar's main menu.
     @Published private(set) var mainMenuMaxX: CGFloat = 0
 
@@ -39,9 +48,24 @@ final class MenuBarManager: ObservableObject {
 
     /// Performs the initial setup of the menu bar.
     func performSetup() {
-        initializeSections()
+        loadInitialState()
         configureCancellables()
+        itemManager.updateProfile()
         appearanceManager.performSetup()
+    }
+
+    private func loadInitialState() {
+        defer {
+            initializeSections()
+        }
+        Defaults.ifPresent(key: .activeProfileName, assign: &activeProfileName)
+        Defaults.ifPresent(key: .profiles) { data in
+            do {
+                profiles = try PropertyListDecoder().decode([MenuBarProfile].self, from: data)
+            } catch {
+                Logger.menuBarManager.error("Error decoding menu bar profiles: \(error)")
+            }
+        }
     }
 
     /// Performs the initial setup of the menu bar's section list.
@@ -166,6 +190,48 @@ final class MenuBarManager: ObservableObject {
             .autoconnect()
             .sink { [weak self] _ in
                 self?.updateAverageColor()
+            }
+            .store(in: &c)
+
+        $activeProfileName
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] name in
+                guard let self else {
+                    return
+                }
+                if let profile = profiles.first(where: { $0.name == name }) {
+                    activeProfile = profile
+                }
+                Defaults.set(name, forKey: .activeProfileName)
+            }
+            .store(in: &c)
+
+        $profiles
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] profiles in
+                guard let self else {
+                    return
+                }
+                do {
+                    let data = try PropertyListEncoder().encode(profiles)
+                    let dict = try PropertyListSerialization.propertyList(from: data, format: nil)
+                    Defaults.set(dict, forKey: .profiles)
+                } catch {
+                    Logger.menuBarManager.error("Error encoding menu bar profiles: \(error)")
+                }
+            }
+            .store(in: &c)
+
+        $activeProfile
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] activeProfile in
+                guard let self else {
+                    return
+                }
+                var profiles = profiles
+                profiles.removeAll { $0.name == activeProfile.name }
+                profiles.append(activeProfile)
+                self.profiles = profiles
             }
             .store(in: &c)
 
