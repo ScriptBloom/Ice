@@ -141,6 +141,14 @@ class LayoutBarCocoaView: NSView {
         guard sender.draggingSourceOperationMask == .move else {
             return false
         }
+        if 
+            let source = sender.draggingSource as? LayoutBarItemView,
+            let oldContainerInfo = source.oldContainerInfo,
+            let sourceCocoaView = oldContainerInfo.container.superview as? LayoutBarCocoaView,
+            sourceCocoaView !== self
+        {
+            _ = sourceCocoaView.updateProfile()
+        }
         return updateProfile()
     }
 }

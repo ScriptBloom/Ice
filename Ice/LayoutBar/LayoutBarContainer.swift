@@ -270,8 +270,8 @@ class LayoutBarContainer: NSView {
             }
             // updating normally relies on the presence of other arranged views,
             // but if the container is empty, it needs to be handled separately
-            guard !arrangedViews.isEmpty else {
-                arrangedViews.append(sourceView)
+            guard !arrangedViews.filter({ $0.isEnabled }).isEmpty else {
+                arrangedViews.insert(sourceView, at: 0)
                 return .move
             }
             // convert dragging location from window coordinates
