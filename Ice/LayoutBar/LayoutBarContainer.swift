@@ -98,6 +98,7 @@ class LayoutBarContainer: NSView {
         self.translatesAutoresizingMaskIntoConstraints = false
         unregisterDraggedTypes()
         configureCancellables()
+        setArrangedViews()
     }
 
     @available(*, unavailable)
@@ -110,8 +111,9 @@ class LayoutBarContainer: NSView {
 
         section.$menuBarItems
             .removeDuplicates()
-            .sink { [weak self] menuBarItems in
-                self?.setArrangedViews(from: menuBarItems)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.setArrangedViews()
             }
             .store(in: &c)
 
@@ -184,23 +186,35 @@ class LayoutBarContainer: NSView {
         heightConstraint.constant = maxHeight
     }
 
-    /// Sets the container's arranged views from the given array of
-    /// menu bar items.
+    /// Sets the container's arranged views its section's menu bar items.
     ///
     /// - Note: If the value of the container's ``canSetArrangedViews``
     ///   property is `false`, this function returns early.
-    ///
-    /// - Parameter menuBarItems: An array of menu bar items to use
-    ///   to create the container's arranged views.
-    func setArrangedViews(from menuBarItems: [MenuBarItem]) {
+    func setArrangedViews() {
         guard
             canSetArrangedViews,
             let display = DisplayInfo.main
         else {
             return
         }
-        arrangedViews = menuBarItems.compactMap { item in
-            LayoutBarItemView(item: item, display: display, itemManager: itemManager)
+        arrangedViews = section.menuBarItems.compactMap { item in
+            StandardLayoutBarItemView(item: item, display: display, itemManager: itemManager)
+        }
+        if 
+            let menuBarManager = itemManager.menuBarManager,
+            let profile = menuBarManager.activeProfile,
+            let name = profile.correctSectionName(for: .newItems),
+            section.name == name,
+            let index = profile.itemInfoForSection(withName: name).firstIndex(of: .newItems)
+        {
+            let view = SpecialLayoutBarItemView(kind: .newItems)
+            if index >= arrangedViews.endIndex {
+                arrangedViews.append(view)
+            } else if index < arrangedViews.startIndex {
+                arrangedViews.insert(view, at: arrangedViews.startIndex)
+            } else {
+                arrangedViews.insert(view, at: index)
+            }
         }
     }
 

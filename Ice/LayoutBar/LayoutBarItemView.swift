@@ -9,10 +9,8 @@ import Cocoa
 
 /// A view that displays an image in a menu bar layout view.
 class LayoutBarItemView: NSView {
-    static let placeholderImage: CGImage = {
-        let nsImage = NSImage(systemSymbolName: "questionmark.circle.fill", accessibilityDescription: "")!
-        return nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil)!
-    }()
+    /// The image displayed inside the view.
+    var image = NSImage()
 
     /// Temporary information that the item view retains when it is
     /// moved outside of a layout view.
@@ -29,11 +27,6 @@ class LayoutBarItemView: NSView {
     /// A Boolean value that indicates whether the item view is
     /// currently inside a container.
     var hasContainer = false
-
-    let item: MenuBarItem
-
-    /// The image displayed inside the view.
-    let image: NSImage
 
     /// A Boolean value that indicates whether the item view is a
     /// dragging placeholder.
@@ -52,43 +45,8 @@ class LayoutBarItemView: NSView {
         }
     }
 
-    /// Creates a view that displays the given menu bar item.
-    init?(item: MenuBarItem, display: DisplayInfo, itemManager: MenuBarItemManager) {
-        var image: CGImage?
-        if let cachedImage = itemManager.cachedItemImages[item.cacheKey] {
-            image = cachedImage
-        } else if let capturedImage = CGImage.captureWindow(with: item.windowID) {
-            image = capturedImage
-            DispatchQueue.main.async {
-                itemManager.cachedItemImages[item.cacheKey] = capturedImage
-            }
-        }
-        guard let image else {
-            return nil
-        }
-        self.item = item
-        let trimmedImage: NSImage = {
-            // only trim horizontal edges to maintain proper vertical centering
-            // due to the status item shadow offsetting the trim
-            let cgImage = image.trimmingTransparentPixels(edges: [.minXEdge, .maxXEdge]) ?? image
-            return NSImage(cgImage: cgImage, size: item.frame.size)
-        }()
-        let centeredImage = NSImage(size: item.frame.size, flipped: false) { rect in
-            let centeredRect = CGRect(
-                x: rect.midX - (trimmedImage.size.width / 2),
-                y: rect.midY - (trimmedImage.size.height / 2),
-                width: trimmedImage.size.width,
-                height: trimmedImage.size.height
-            )
-            trimmedImage.draw(in: centeredRect)
-            return true
-        }
-        self.image = centeredImage
-        // set the frame to the full item frame size; the trimmed image will
-        // be centered within the full bounds when displayed
-        super.init(frame: NSRect(origin: .zero, size: item.frame.size))
-        self.toolTip = item.displayName
-        self.isEnabled = item.acceptsMouseEvents
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
         unregisterDraggedTypes()
     }
 
@@ -97,13 +55,20 @@ class LayoutBarItemView: NSView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    /// Provides an alert to display when the item view is disabled.
+    func provideAlertForDisabledItem() -> NSAlert {
+        let alert = NSAlert()
+        alert.messageText = "Item is not movable."
+        return alert
+    }
+
     override func draw(_ dirtyRect: NSRect) {
         if !isDraggingPlaceholder {
             image.draw(
                 in: bounds,
                 from: .zero,
                 operation: .sourceOver,
-                fraction: item.acceptsMouseEvents ? 1.0 : 0.67
+                fraction: isEnabled ? 1.0 : 0.67
             )
         }
     }
@@ -111,10 +76,8 @@ class LayoutBarItemView: NSView {
     override func mouseDragged(with event: NSEvent) {
         super.mouseDragged(with: event)
 
-        guard item.acceptsMouseEvents else {
-            let alert = NSAlert()
-            alert.messageText = "Item is not movable."
-            alert.informativeText = "macOS prohibits \"\(item.displayName)\" from being moved."
+        guard isEnabled else {
+            let alert = provideAlertForDisabledItem()
             alert.runModal()
             return
         }
@@ -180,6 +143,98 @@ extension LayoutBarItemView: NSDraggingSource {
             }
             container.shouldAnimateNextLayoutPass = false
             container.arrangedViews.insert(self, at: index)
+        }
+    }
+}
+
+// MARK: - StandardLayoutBarItemView
+
+class StandardLayoutBarItemView: LayoutBarItemView {
+    let item: MenuBarItem
+
+    /// Creates a view that displays the given menu bar item.
+    init?(item: MenuBarItem, display: DisplayInfo, itemManager: MenuBarItemManager) {
+        var cgImage: CGImage?
+        if let cachedImage = itemManager.cachedItemImages[item.cacheKey] {
+            cgImage = cachedImage
+        } else if let capturedImage = CGImage.captureWindow(with: item.windowID) {
+            cgImage = capturedImage
+            DispatchQueue.main.async {
+                itemManager.cachedItemImages[item.cacheKey] = capturedImage
+            }
+        }
+
+        guard let cgImage else {
+            return nil
+        }
+
+        self.item = item
+        // set the frame to the full item frame size; the trimmed image will
+        // be centered within the full bounds when displayed
+        super.init(frame: NSRect(origin: .zero, size: item.frame.size))
+
+        self.toolTip = item.displayName
+        self.isEnabled = item.acceptsMouseEvents
+
+        // only trim horizontal edges to maintain proper vertical centering
+        // due to the status item shadow offsetting the trim
+        let trimmedImage = NSImage(
+            cgImage: cgImage.trimmingTransparentPixels(edges: [.minXEdge, .maxXEdge]) ?? cgImage,
+            size: item.frame.size
+        )
+        self.image = NSImage(size: item.frame.size, flipped: false) { rect in
+            let centeredRect = CGRect(
+                x: rect.midX - (trimmedImage.size.width / 2),
+                y: rect.midY - (trimmedImage.size.height / 2),
+                width: trimmedImage.size.width,
+                height: trimmedImage.size.height
+            )
+            trimmedImage.draw(in: centeredRect)
+            return true
+        }
+    }
+
+    override func provideAlertForDisabledItem() -> NSAlert {
+        let alert = super.provideAlertForDisabledItem()
+        alert.informativeText = "macOS prohibits \"\(item.displayName)\" from being moved."
+        return alert
+    }
+}
+
+// MARK: - SpecialLayoutBarItemView
+
+class SpecialLayoutBarItemView: LayoutBarItemView {
+    enum Kind: NSString {
+        case newItems = "New items appear here"
+
+        var color: NSColor {
+            switch self {
+            case .newItems:
+                NSColor.systemPurple
+            }
+        }
+    }
+
+    init(kind: Kind) {
+        let labelAttributes: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: NSFont.systemFontSize),
+            .foregroundColor: NSColor.white,
+        ]
+        let labelSize = kind.rawValue.size(withAttributes: labelAttributes)
+
+        super.init(frame: CGRect(origin: .zero, size: labelSize).insetBy(dx: -10, dy: -7.5))
+
+        self.image = NSImage(size: bounds.size, flipped: false) { rect in
+            kind.color.withAlphaComponent(0.5).setFill()
+            NSBezierPath(roundedRect: rect, xRadius: 5, yRadius: 5).fill()
+            let centeredRect = CGRect(
+                x: rect.midX - labelSize.width / 2,
+                y: rect.midY - labelSize.height / 2,
+                width: labelSize.width, 
+                height: labelSize.height
+            )
+            kind.rawValue.draw(in: centeredRect, withAttributes: labelAttributes)
+            return true
         }
     }
 }
