@@ -222,7 +222,7 @@ class SpecialLayoutBarItemView: LayoutBarItemView {
         ]
         let labelSize = kind.rawValue.size(withAttributes: labelAttributes)
 
-        super.init(frame: CGRect(origin: .zero, size: labelSize).insetBy(dx: -10, dy: -7.5))
+        super.init(frame: CGRect(x: 0, y: 0, width: labelSize.width + 10, height: 22))
 
         self.image = NSImage(size: bounds.size, flipped: false) { rect in
             kind.color.withAlphaComponent(0.5).setFill()
