@@ -234,7 +234,7 @@ class SpecialLayoutBarItemView: LayoutBarItemView {
             let centeredRect = CGRect(
                 x: rect.midX - labelSize.width / 2,
                 y: rect.midY - labelSize.height / 2,
-                width: labelSize.width, 
+                width: labelSize.width,
                 height: labelSize.height
             )
             kind.rawValue.draw(in: centeredRect, withAttributes: labelAttributes)

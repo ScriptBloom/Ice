@@ -257,7 +257,7 @@ final class MenuBarManager: ObservableObject {
 
         $profiles
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] profiles in
+            .sink { [weak self] _ in
                 self?.saveProfiles()
             }
             .store(in: &c)

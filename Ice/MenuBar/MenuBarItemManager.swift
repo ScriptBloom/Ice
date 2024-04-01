@@ -137,13 +137,13 @@ class MenuBarItemManager: ObservableObject {
         CGAssociateMouseAndMouseCursorPosition(0)
 
         // hide the cursor and move it to the start position
-//        CGDisplayHideCursor(CGMainDisplayID())
+        // CGDisplayHideCursor(CGMainDisplayID())
         CGWarpMouseCursorPosition(startPoint)
 
         defer {
             // move the cursor back to its original location and show it
             CGWarpMouseCursorPosition(originalMouseLocation)
-//            CGDisplayShowCursor(CGMainDisplayID())
+            // CGDisplayShowCursor(CGMainDisplayID())
             CGAssociateMouseAndMouseCursorPosition(1)
         }
 
@@ -174,7 +174,7 @@ class MenuBarItemManager: ObservableObject {
             }
             try await move(item: item, to: position)
             position += 1
-//            try await Task.sleep(for: .seconds(0.1))
+            // try await Task.sleep(for: .seconds(0.1))
         }
         try await Task.sleep(for: .seconds(0.25))
     }
