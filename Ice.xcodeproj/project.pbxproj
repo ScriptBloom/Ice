@@ -17,6 +17,7 @@
 		1725FC6A2AED973800A59081 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1725FC692AED973800A59081 /* AppState.swift */; };
 		1736F77C2ADBBF340073428E /* CustomGradientPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1736F77B2ADBBF340073428E /* CustomGradientPicker.swift */; };
 		1736F7802ADBC02B0073428E /* CustomGradient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1736F77F2ADBC02B0073428E /* CustomGradient.swift */; };
+		173797F42BBAD42F0094DB2F /* MenuBarItemMover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173797F32BBAD42F0094DB2F /* MenuBarItemMover.swift */; };
 		1737E3E52BA3C4AA009F0EFA /* HotkeyAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1737E3E42BA3C4AA009F0EFA /* HotkeyAction.swift */; };
 		173C24892B8E80830096F7A1 /* AboutTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173C24882B8E80830096F7A1 /* AboutTab.swift */; };
 		173C248C2B8E821C0096F7A1 /* UpdatesTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173C248B2B8E821C0096F7A1 /* UpdatesTab.swift */; };
@@ -132,6 +133,7 @@
 		1726A3F82B3378B8008B09DD /* Acknowledgements.rtf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.rtf; path = Acknowledgements.rtf; sourceTree = "<group>"; };
 		1736F77B2ADBBF340073428E /* CustomGradientPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomGradientPicker.swift; sourceTree = "<group>"; };
 		1736F77F2ADBC02B0073428E /* CustomGradient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomGradient.swift; sourceTree = "<group>"; };
+		173797F32BBAD42F0094DB2F /* MenuBarItemMover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarItemMover.swift; sourceTree = "<group>"; };
 		1737E3E42BA3C4AA009F0EFA /* HotkeyAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyAction.swift; sourceTree = "<group>"; };
 		173C24882B8E80830096F7A1 /* AboutTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutTab.swift; sourceTree = "<group>"; };
 		173C248B2B8E821C0096F7A1 /* UpdatesTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdatesTab.swift; sourceTree = "<group>"; };
@@ -710,6 +712,7 @@
 				17D1AC8C2B97BB5900726180 /* MenuBarItem.swift */,
 				178DF13B2BAF013F00C781A5 /* MenuBarItemConfiguration.swift */,
 				175523EB2B92B978005EDF9F /* MenuBarItemManager.swift */,
+				173797F32BBAD42F0094DB2F /* MenuBarItemMover.swift */,
 				7166834F2A7681AF006ABF84 /* MenuBarManager.swift */,
 				178DF1352BAEFC4300C781A5 /* MenuBarProfile.swift */,
 				7162406E2AA0A323003EC671 /* MenuBarSection.swift */,
@@ -909,6 +912,7 @@
 				1736F7802ADBC02B0073428E /* CustomGradient.swift in Sources */,
 				7166834C2A76811C006ABF84 /* NSStatusItem+showMenu.swift in Sources */,
 				711535F22AB9F6C1003193AD /* BindingExposable.swift in Sources */,
+				173797F42BBAD42F0094DB2F /* MenuBarItemMover.swift in Sources */,
 				7166833D2A7680CE006ABF84 /* AppDelegate.swift in Sources */,
 				7133ED6A2A85870E000A7E1B /* SettingsView.swift in Sources */,
 				178DF12E2BAE808400C781A5 /* ColorAverage.swift in Sources */,

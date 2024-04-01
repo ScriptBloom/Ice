@@ -232,14 +232,14 @@ final class MenuBarManager: ObservableObject {
                 guard let self else {
                     return
                 }
-                Task {
-                    do {
-                        try await Task.sleep(for: .seconds(1))
-                        try await self.itemManager.arrangeItems()
-                    } catch {
-                        os_log(.error, "Error arranging menu bar items: \(error)")
-                    }
-                }
+//                Task {
+//                    do {
+//                        try await Task.sleep(for: .seconds(1))
+//                        try await self.itemManager.arrangeItems()
+//                    } catch {
+//                        os_log(.error, "Error arranging menu bar items: \(error)")
+//                    }
+//                }
                 Defaults.set(name, forKey: .activeProfileName)
             }
             .store(in: &c)

@@ -111,6 +111,12 @@ struct MenuBarItem {
         owningApplication?.bundleIdentifier == info.namespace &&
         title == info.title
     }
+
+    /// Returns the first item in the given collection whose windowID
+    /// matches this item's windowID.
+    func firstMatch<C: Collection>(in items: C) -> MenuBarItem? where C.Element == MenuBarItem {
+        items.first { $0.windowID == windowID }
+    }
 }
 
 // MARK: MenuBarItem: Equatable

@@ -142,21 +142,28 @@ class LayoutBarCocoaView: NSView {
         guard sender.draggingSourceOperationMask == .move else {
             return false
         }
-        defer {
-            Task {
-                do {
-                    try await container.itemManager.arrangeItems()
-                } catch {
-                    os_log(.error, "Error arranging menu bar items: \(error)")
+
+        guard let draggingSource = sender.draggingSource as? LayoutBarItemView else {
+            return false
+        }
+
+        if
+            let oldContainerInfo = draggingSource.oldContainerInfo,
+            let sourceCocoaView = oldContainerInfo.container.superview as? LayoutBarCocoaView
+        {
+            if
+                let item = (draggingSource as? StandardLayoutBarItemView)?.item,
+                let index = container.index(of: draggingSource),
+                let itemView = container.arrangedView(atIndex: index - 1) as? StandardLayoutBarItemView
+            {
+                Task {
+                    do {
+                        try await container.itemManager.move(item: item, to: .right(of: itemView.item))
+                    } catch {
+                        os_log(.error, "Error moving menu bar item: \(error)")
+                    }
                 }
             }
-        }
-        if
-            let draggingSource = sender.draggingSource as? LayoutBarItemView,
-            let oldContainerInfo = draggingSource.oldContainerInfo,
-            let sourceCocoaView = oldContainerInfo.container.superview as? LayoutBarCocoaView,
-            sourceCocoaView !== self
-        {
             return sourceCocoaView.updateProfile() && updateProfile()
         }
         return updateProfile()
