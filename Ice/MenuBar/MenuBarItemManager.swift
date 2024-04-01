@@ -42,6 +42,12 @@ class MenuBarItemManager: ObservableObject {
         }
     }
 
+    /// Returns the first menu bar window for the given display.
+    func getMenuBarWindow(for display: DisplayInfo) -> WindowInfo? {
+        let windows = WindowInfo.getCurrent(option: .optionOnScreenOnly)
+        return getMenuBarWindow(from: windows, for: display)
+    }
+
     /// Returns an array of menu bar items in the given menu bar from the given windows.
     func getMenuBarItems(windows: [WindowInfo], menuBarWindow: WindowInfo, display: DisplayInfo) -> [MenuBarItem] {
         let items = windows.compactMap { window in

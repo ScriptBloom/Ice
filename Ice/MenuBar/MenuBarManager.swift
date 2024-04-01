@@ -139,7 +139,7 @@ final class MenuBarManager: ObservableObject {
 
         // update the main menu maxX
         Publishers.CombineLatest(
-            NSWorkspace.shared.publisher(for: \.frontmostApplication), 
+            NSWorkspace.shared.publisher(for: \.frontmostApplication),
             NSWorkspace.shared.publisher(for: \.frontmostApplication?.ownsMenuBar)
         )
         .sink { [weak self] frontmostApplication, _ in
@@ -182,7 +182,12 @@ final class MenuBarManager: ObservableObject {
                     return
                 }
                 if sections.contains(where: { !$0.isHidden }) {
-                    guard let display = DisplayInfo.main else {
+                    guard
+                        let screen = NSScreen.main,
+                        !isMenuBarHidden(for: screen),
+                        !isFullscreen(for: screen),
+                        let display = DisplayInfo(displayID: screen.displayID)
+                    else {
                         return
                     }
 
@@ -203,7 +208,7 @@ final class MenuBarManager: ObservableObject {
                     if offsetMinX <= mainMenuMaxX {
                         hideApplicationMenus()
                     }
-                } else if 
+                } else if
                     isHidingApplicationMenus,
                     appState.settingsWindow?.isVisible == false
                 {
@@ -368,6 +373,28 @@ final class MenuBarManager: ObservableObject {
     /// Returns the menu bar section with the given name.
     func section(withName name: MenuBarSection.Name) -> MenuBarSection? {
         sections.first { $0.name == name }
+    }
+
+    /// Returns a Boolean value that indicates whether the menu bar is
+    /// hidden for the given screen.
+    func isMenuBarHidden(for screen: NSScreen) -> Bool {
+        guard
+            let display = DisplayInfo(displayID: screen.displayID),
+            let menuBarWindow = itemManager.getMenuBarWindow(for: display)
+        else {
+            return true
+        }
+        return !menuBarWindow.isOnScreen
+    }
+
+    /// Returns a Boolean value that indicates whether an app is fullscreen
+    /// on the given screen.
+    func isFullscreen(for screen: NSScreen) -> Bool {
+        WindowInfo.getCurrent(option: .optionOnScreenOnly).contains { window in
+            window.frame == screen.frame &&
+            window.owningApplication?.bundleIdentifier == "com.apple.dock" &&
+            window.title == "Fullscreen Backdrop"
+        }
     }
 }
 
