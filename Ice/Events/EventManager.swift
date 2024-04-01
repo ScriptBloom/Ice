@@ -18,6 +18,7 @@ final class EventManager {
         guard
             let self,
             let appState,
+            !appState.menuBarManager.itemManager.isArrangingItems,
             appState.settingsManager.generalSettingsManager.showOnHover,
             !appState.showOnHoverPreventedByUserInteraction,
             let screen = NSScreen.main,
@@ -53,7 +54,10 @@ final class EventManager {
     private(set) lazy var leftMouseUpMonitor = UniversalEventMonitor(
         mask: .leftMouseUp
     ) { [weak appState] event in
-        guard let appState else {
+        guard 
+            let appState,
+            !appState.menuBarManager.itemManager.isArrangingItems
+        else {
             return event
         }
 
@@ -115,6 +119,7 @@ final class EventManager {
         guard
             let self,
             let appState,
+            !appState.menuBarManager.itemManager.isArrangingItems,
             let screen = NSScreen.main,
             let visibleSection = appState.menuBarManager.section(withName: .visible),
             let hiddenSection = appState.menuBarManager.section(withName: .hidden),
@@ -161,6 +166,7 @@ final class EventManager {
         guard
             let self,
             let appState,
+            !appState.menuBarManager.itemManager.isArrangingItems,
             let screen = NSScreen.main
         else {
             return event
@@ -180,6 +186,7 @@ final class EventManager {
     ) { [weak appState] event in
         guard
             let appState,
+            !appState.menuBarManager.itemManager.isArrangingItems,
             event.modifierFlags.contains(.command),
             let screen = NSScreen.main,
             screen.isMouseInMenuBar
@@ -213,6 +220,7 @@ final class EventManager {
     ) { [weak appState] event in
         guard
             let appState,
+            !appState.menuBarManager.itemManager.isArrangingItems,
             appState.settingsManager.generalSettingsManager.showOnScroll,
             let screen = NSScreen.main,
             screen.isMouseInMenuBar,

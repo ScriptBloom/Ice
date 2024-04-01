@@ -223,8 +223,30 @@ final class MenuBarManager: ObservableObject {
 
         $activeProfileName
             .receive(on: DispatchQueue.main)
-            .sink { name in
+            .sink { [weak self] name in
+                guard let self else {
+                    return
+                }
+                Task {
+                    do {
+                        try await Task.sleep(for: .seconds(1))
+                        try await self.itemManager.arrangeItems()
+                    } catch {
+                        os_log(.error, "Error arranging menu bar items: \(error)")
+                    }
+                }
                 Defaults.set(name, forKey: .activeProfileName)
+            }
+            .store(in: &c)
+
+        $profiles
+            .sink { [weak self] profiles in
+                guard let self else {
+                    return
+                }
+                for profile in profiles {
+                    profile.assignItemManager(itemManager)
+                }
             }
             .store(in: &c)
 

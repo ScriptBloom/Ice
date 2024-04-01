@@ -6,6 +6,7 @@
 import Cocoa
 import Combine
 import ScreenCaptureKit
+import OSLog
 
 /// A Cocoa view that manages the menu bar layout interface.
 class LayoutBarCocoaView: NSView {
@@ -141,7 +142,16 @@ class LayoutBarCocoaView: NSView {
         guard sender.draggingSourceOperationMask == .move else {
             return false
         }
-        if 
+        defer {
+            Task {
+                do {
+                    try await container.itemManager.arrangeItems()
+                } catch {
+                    os_log(.error, "Error arranging menu bar items: \(error)")
+                }
+            }
+        }
+        if
             let draggingSource = sender.draggingSource as? LayoutBarItemView,
             let oldContainerInfo = draggingSource.oldContainerInfo,
             let sourceCocoaView = oldContainerInfo.container.superview as? LayoutBarCocoaView,

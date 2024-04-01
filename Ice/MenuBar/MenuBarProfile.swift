@@ -5,6 +5,7 @@
 
 import Combine
 import CoreGraphics
+import OSLog
 
 // MARK: - MenuBarProfile
 
@@ -12,9 +13,15 @@ final class MenuBarProfile: ObservableObject {
     @Published var name: String
     @Published var itemConfiguration: MenuBarItemConfiguration
 
+    private weak var itemManager: MenuBarItemManager?
+
     init(name: String, itemConfiguration: MenuBarItemConfiguration) {
         self.name = name
         self.itemConfiguration = itemConfiguration
+    }
+
+    func assignItemManager(_ itemManager: MenuBarItemManager) {
+        self.itemManager = itemManager
     }
 
     /// Adds the given items to the section in the profile's configuration
@@ -122,6 +129,7 @@ extension MenuBarProfile {
     /// item manager and display to read the current menu bar items.
     static func createDefaultProfile(with itemManager: MenuBarItemManager, display: DisplayInfo) -> MenuBarProfile {
         let profile = MenuBarProfile(name: defaultProfileName, itemConfiguration: .defaultConfiguration)
+        profile.assignItemManager(itemManager)
         let info = getCurrentItemInfo(itemManager: itemManager, display: display)
         profile.addItems(info)
         return profile
@@ -148,4 +156,9 @@ extension MenuBarProfile: Codable {
         try container.encode(name, forKey: .name)
         try container.encode(itemConfiguration, forKey: .itemConfiguration)
     }
+}
+
+// MARK: - Logger
+private extension Logger {
+    static let menuBarProfile = Logger(category: "MenuBarProfile")
 }
