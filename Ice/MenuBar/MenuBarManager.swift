@@ -308,10 +308,9 @@ final class MenuBarManager: ObservableObject {
     /// desktop wallpaper behind the menu bar.
     private func updateAverageColor() {
         Task { @MainActor in
-            try await ScreenCaptureManager.shared.update()
             guard
                 let display = DisplayInfo.main,
-                let wallpaper = try await ScreenCaptureManager.shared.desktopWallpaperBelowMenuBar(for: display),
+                let wallpaper = try await appState?.screenCaptureManager.desktopWallpaperBelowMenuBar(for: display),
                 let color = wallpaper.averageColor(accuracy: .low, algorithm: .simple, options: .ignoreAlpha)
             else {
                 return
