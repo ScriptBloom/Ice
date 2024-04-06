@@ -20,7 +20,7 @@ final class EventManager {
             let appState,
             !appState.menuBarManager.itemManager.isArrangingItems,
             appState.settingsManager.generalSettingsManager.showOnHover,
-            !appState.showOnHoverPreventedByUserInteraction,
+            !appState.showOnHoverIsPreventedByUserInteraction,
             let display = DisplayInfo.main,
             let hiddenSection = appState.menuBarManager.section(withName: .hidden)
         else {
@@ -128,7 +128,7 @@ final class EventManager {
         }
 
         if isMouseInEmptyMenuBarSpace(of: display) {
-            appState.showOnHoverPreventedByUserInteraction = true
+            appState.showOnHoverIsPreventedByUserInteraction = true
             if appState.settingsManager.generalSettingsManager.showOnClick {
                 if
                     NSEvent.modifierFlags == .option,
@@ -147,12 +147,12 @@ final class EventManager {
             NSEvent.mouseLocation.x - display.frame.origin.x > appState.menuBarManager.mainMenuMaxX,
             isMouseInMenuBar(of: display)
         {
-            appState.showOnHoverPreventedByUserInteraction = true
+            appState.showOnHoverIsPreventedByUserInteraction = true
         } else if
             let visibleControlItemFrame = visibleSection.controlItem.windowFrame,
             visibleControlItemFrame.contains(NSEvent.mouseLocation)
         {
-            appState.showOnHoverPreventedByUserInteraction = true
+            appState.showOnHoverIsPreventedByUserInteraction = true
         }
 
         return event
@@ -171,7 +171,7 @@ final class EventManager {
         }
 
         if isMouseInEmptyMenuBarSpace(of: display) {
-            appState.showOnHoverPreventedByUserInteraction = true
+            appState.showOnHoverIsPreventedByUserInteraction = true
             appState.menuBarManager.showRightClickMenu(at: NSEvent.mouseLocation)
         }
 

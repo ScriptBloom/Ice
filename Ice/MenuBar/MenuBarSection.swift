@@ -191,7 +191,7 @@ final class MenuBarSection: ObservableObject {
         case .alwaysHidden:
             controlItem.state = .hideItems
         }
-        appState?.showOnHoverPreventedByUserInteraction = false
+        appState?.showOnHoverIsPreventedByUserInteraction = false
         stopRehideChecks()
     }
 
